@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+
+  <!--
+    Removes the empty .NET System.Web.dll / System.Configuration.dll facades, which would otherwise
+    collide with the port: CS0433 at build time, TypeLoadException on the first request. Mandatory for
+    every consumer, so it travels in the package rather than being something a PackageReference user has
+    to find and copy.
+
+    The Condition is what makes this work in both worlds: inside this repository the projects import
+    ..\Build\WebFormsPort.targets directly and this file is not beside them, so the import is skipped
+    and nothing is imported twice.
+  -->
+  <Import Project="$(MSBuildThisFileDirectory)WebFormsPort.targets"
+          Condition="Exists('$(MSBuildThisFileDirectory)WebFormsPort.targets')" />
+
+  <!--
+    ==========================================================================================
+    Content items - the markup the runtime reads and compiles at request time.
+
+    Here rather than in the .props for the same reason as the nesting below: a package's build/*.props
+    is imported by Microsoft.Common.props, BEFORE the SDK has defined its default item globs. A .targets
+    is imported at the very end, once they exist - which is still evaluation, so these items are part
+    of the project proper and not something a target produces later.
+
+    Switches, and why each glob is shaped the way it is, are documented in the .props beside this file.
+    ==========================================================================================
+  -->
+
+  <!--
+    Declared FIRST and in its own ItemGroup: MSBuild evaluates items in document order, so the
+    transform below can only see this list if it already exists.
+  -->
+  <!--
+    Two steps, and both are needed.
+
+    INCLUDE adds files that are not items yet. Exclude="...;@(None)" is what makes that safe to adopt
+    incrementally: a project still carrying its own <None Include="**\*.aspx" /> keeps it and this adds
+    only what is missing, rather than failing with NETSDK1022 "Duplicate 'None' items".
+
+    UPDATE then sets the copy metadata. It is the step that actually does the work in a normal project,
+    because the SDK's own default None glob (EnableDefaultNoneItems, on by default and unrelated to
+    EnableDefaultContentItems) has ALREADY made every .aspx a None item - just without
+    CopyToOutputDirectory. Include alone therefore excludes all of them as duplicates and copies
+    nothing at all: a clean build, an empty output directory, and a 404 on every page.
+
+    Update needs no bin\/obj\ exclude of its own: it only matches items that already exist, and the
+    SDK's DefaultItemExcludes kept those out in the first place.
+  -->
+  <ItemGroup Condition="'$(WebFormsIncludeContent)' == 'true'">
+    <None Include="$(WebFormsContentGlobs)"
+          Exclude="$(WebFormsContentExclude);@(None)"
+          CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(WebFormsIncludeContent)' == 'true'">
+    <None Update="$(WebFormsContentGlobs)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <!--
+    App_Code: removed from Compile, added as content. Remove= is harmless when the directory does not
+    exist, so this needs no condition of its own.
+  -->
+  <ItemGroup Condition="'$(WebFormsAppCodeAsContent)' == 'true'">
+    <Compile Remove="App_Code\**\*.cs" />
+    <Compile Remove="App_Code\**\*.vb" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(WebFormsAppCodeAsContent)' == 'true'">
+    <None Include="App_Code\**\*.cs;App_Code\**\*.vb"
+          Exclude="$(WebFormsContentExclude);@(None)"
+          CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <!--
+    Nests code-behind and designer files under their markup file, so a ported WebForms project opens in
+    Visual Studio looking like the classic web project it came from:
+
+        Default.aspx
+          +- Default.aspx.cs
+          +- Default.aspx.designer.cs
+
+    See the .props beside this file for the switches, and for why the work is here rather than there.
+
+    How the parent file name is derived - the trick is that %(Filename) has already had the LAST
+    extension removed:
+
+        Default.aspx.cs          -> %(Filename) = "Default.aspx"          -> parent as-is
+        Default.aspx.designer.cs -> %(Filename) = "Default.aspx.designer" -> drop one more extension
+
+    GetFileNameWithoutExtension does that second step, which keeps this to two rules per language
+    rather than a string replace that would also mangle a file legitimately called "designer.aspx.cs".
+
+    Update= rather than Include=: these files are already in the project through the SDK's default
+    globs, and Include would add a duplicate compile item (CS2002) instead of annotating the existing
+    one. It is also why nothing is conditional on the file existing - Update only touches items that
+    are already there, so an application with no designer files simply matches nothing.
+  -->
+
+  <!--
+    Declared FIRST, and in its own ItemGroup: MSBuild evaluates items in document order, so the
+    transforms below can only see this list if it already exists.
+  -->
+  <ItemGroup Condition="'$(WebFormsNestCodeBehind)' == 'true'">
+    <WebFormsMarkupExtensionItem Include="$(WebFormsMarkupExtensions)" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(WebFormsNestCodeBehind)' == 'true'">
+
+    <!-- Foo.aspx.cs / Foo.aspx.vb under Foo.aspx -->
+    <Compile Update="@(WebFormsMarkupExtensionItem->'**\*.%(Identity).cs')"
+             DependentUpon="%(Filename)" />
+    <Compile Update="@(WebFormsMarkupExtensionItem->'**\*.%(Identity).vb')"
+             DependentUpon="%(Filename)" />
+
+    <!-- Foo.aspx.designer.cs / Foo.aspx.designer.vb under Foo.aspx -->
+    <Compile Update="@(WebFormsMarkupExtensionItem->'**\*.%(Identity).designer.cs')"
+             DependentUpon="$([System.IO.Path]::GetFileNameWithoutExtension('%(Filename)'))" />
+    <Compile Update="@(WebFormsMarkupExtensionItem->'**\*.%(Identity).designer.vb')"
+             DependentUpon="$([System.IO.Path]::GetFileNameWithoutExtension('%(Filename)'))" />
+
+    <!--
+      Foo.aspx.resx under Foo.aspx. Both item types are updated because a ported project usually
+      carries these as None (content the runtime reads) while a conventional one has them as
+      EmbeddedResource.
+    -->
+    <EmbeddedResource Update="@(WebFormsMarkupExtensionItem->'**\*.%(Identity).resx')"
+                      DependentUpon="%(Filename)" />
+    <None Update="@(WebFormsMarkupExtensionItem->'**\*.%(Identity).resx')"
+          DependentUpon="%(Filename)" />
+
+    <!--
+      ...except under App_LocalResources\, where the metadata is cleared again.
+
+      DependentUpon is resolved relative to the item's OWN directory, and ASP.NET puts local resources
+      in App_LocalResources\ - a different folder from the page they describe. So
+      App_LocalResources\Foo.aspx.resx would name a "Foo.aspx" that does not exist beside it, and the
+      nesting silently never happens.
+
+      Clearing it afterwards is how that is expressed: Update= accepts no Exclude attribute (MSB4066),
+      and built-in metadata such as %(RecursiveDir) is rejected inside a condition on an Update
+      (MSB4190), so neither of the obvious ways to scope the rule above is available. A later Update
+      wins, which makes this the one mechanism that does work.
+    -->
+    <EmbeddedResource Update="**\App_LocalResources\**\*.resx" DependentUpon="" />
+    <None Update="**\App_LocalResources\**\*.resx" DependentUpon="" />
+
+  </ItemGroup>
+
+</Project>

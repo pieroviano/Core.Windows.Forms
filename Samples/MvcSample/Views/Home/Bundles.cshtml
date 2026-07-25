@@ -1,0 +1,20 @@
+@using System.Web.Optimization
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Bundles</title>
+    @* Exactly what an ASP.NET MVC layout writes. *@
+    @Styles.Render("~/Content/css")
+</head>
+<body>
+    <h1>Bundles</h1>
+    @Scripts.Render("~/bundles/app")
+    @Scripts.Render("~/bundles/all-scripts")
+
+    <p id="script-url">@Scripts.Url("~/bundles/app")</p>
+    <p id="style-url">@Styles.Url("~/Content/css")</p>
+</body>
+</html>

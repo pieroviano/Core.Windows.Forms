@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+    <Import Project="$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.props" Condition="Exists('$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.props')" />
+    <PropertyGroup>
+        <!-- Every port assembly is packable; only tests and samples are not. -->
+        <PackageOutputPath>$(SolutionDir)Packages/</PackageOutputPath>
+        <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+        <Version>$(VersionPrefix).$(VersionSuffix)</Version>
+        <TargetFramework>net10.0</TargetFramework>
+        <!-- NOT named System.Web.Razor. Unlike System.Web there is no empty framework facade to collide
+         with here, but the naming follows the rest of the port so that every ported assembly is
+         recognisable as one and configuration retargeting has a single rule to apply.
+         Namespaces are unchanged: System.Web.Razor.* throughout. -->
+        <AssemblyName>Core.Web.Razor</AssemblyName>
+        <RootNamespace>System.Web.Razor</RootNamespace>
+        <!-- Mono-era C#, at the minimum .NET 10 requires. See AspNetCore.Web.csproj. -->
+        <LangVersion>latest</LangVersion>
+        <Nullable>disable</Nullable>
+        <ImplicitUsings>disable</ImplicitUsings>
+        <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+        <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+        <NoWarn>$(NoWarn);612;618;436;1591;0108;0114;0067;0162;0169;0219;0414;0649;3021;SYSLIB0003;SYSLIB0011;SYSLIB0012;SYSLIB0021;SYSLIB0022;SYSLIB0023;CS8981</NoWarn>
+        <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+        <WarningLevel>0</WarningLevel>
+        <DebugType>portable</DebugType>
+        <AspNetWebStackDir>$(MSBuildThisFileDirectory)..\Mono\external\aspnetwebstack\src\</AspNetWebStackDir>
+        <DefineConstants>$(DefineConstants);ASPNETWEBPAGES</DefineConstants>
+        <DefineConstants>$(DefineConstants);NET_4_0;NET_4_5;MONO;SYSTEM_WEB_PORT</DefineConstants>
+        <PackageId>AspNet$(AssemblyName)</PackageId>
+        <Description>The Razor parser and code generator on .NET 10 - the compiler front end for .cshtml. Add AspNetCore.Web.WebPages.Base to render them.</Description>
+        <!-- Apache-2.0 for the aspnetwebstack sources this compiles, MIT for Mono's AssemblyInfo.cs and
+             this port's own code. See Directory.Build.props for why the expression must be explicit. -->
+        <PortLicenseExpression>Apache-2.0 AND MIT</PortLicenseExpression>
+    </PropertyGroup>
+    <ItemGroup>
+        <!-- Razor's output is a CodeCompileUnit, so the whole public surface is CodeDom. .NET forwards
+         System.CodeDom to this package rather than shipping it in the framework. Only the code-
+         *generation* half is used here; CompileAssemblyFrom* throws on .NET Core and is replaced by
+         Core.Web's Port/RoslynCompiler.cs. Same version Core.Web pins - 8.0.0 was never published. -->
+        <PackageReference Include="Net4x.NuGetUtility" Version="$(NuGetUtilityVersion)" PrivateAssets="All" />
+        <PackageReference Include="System.CodeDom" Version="9.0.0" />
+    </ItemGroup>
+    <!-- Upstream sources, compiled in place. Regenerate with: Tools/gen-sources.ps1 -->
+    <PropertyGroup>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+    </PropertyGroup>
+    <ItemGroup>
+        <Content Include="README.md" Link="README.md" Pack="true" PackagePath="\README.md" />
+        <!-- Travels with the package: an SPDX expression says WHICH licences apply, not to which
+             files. See Directory.Build.props for why the expression is set explicitly. -->
+        <Content Include="$(MSBuildThisFileDirectory)..\THIRD-PARTY-NOTICES.md" Link="THIRD-PARTY-NOTICES.md" Pack="true" PackagePath="\THIRD-PARTY-NOTICES.md" />
+    </ItemGroup>
+    <Import Project="Sources.generated.props" />
+    <ItemGroup>
+        <Compile Include="Generated\**\*.cs" />
+        <Compile Include="Overrides\**\*.cs" />
+        <Compile Include="Port\**\*.cs" />
+    </ItemGroup>
+    <ItemGroup>
+        <!--
+      Resource names matter and are not guessable from the file names; upstream's Makefile declares
+      them explicitly (RESOURCE_DEFS), and the Designer classes look them up at runtime:
+
+        * RazorResources.Designer.cs:42 constructs a ResourceManager for the LITERAL name
+          "System.Web.Razor.Resources.RazorResources" - it must match exactly.
+        * CommonResources.Designer.cs:43 instead searches the manifest for a name ENDING in
+          "CommonResources.resources" and calls .Single() on the result - so the name is flexible,
+          but there must be exactly one. A second such resource makes it throw.
+
+      Get either wrong and the failure is a MissingManifestResourceException the first time Razor
+      reports a parse error, which is a long way from the cause.
+    -->
+        <EmbeddedResource Include="$(AspNetWebStackDir)System.Web.Razor\Resources\RazorResources.resx" LogicalName="System.Web.Razor.Resources.RazorResources.resources" />
+        <EmbeddedResource Include="$(AspNetWebStackDir)CommonResources.resx" LogicalName="System.Web.Razor.Common.CommonResources.resources" />
+    </ItemGroup>
+    <Import Project="$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.targets" Condition="Exists('$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.targets')" />
+</Project>

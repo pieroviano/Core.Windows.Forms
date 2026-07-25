@@ -1,0 +1,30 @@
+@model IEnumerable<MvcSample.Controllers.Widget>
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<h1>@ViewBag.Heading</h1>
+
+@if (TempData["echo"] != null)
+{
+    <p id="echo">@TempData["echo"]</p>
+}
+
+<table id="widgets">
+@foreach (var widget in Model)
+{
+    <tr><td>@widget.Id</td><td>@Html.ActionLink(widget.Name, "Details", new { id = widget.Id })</td><td>@widget.Price</td></tr>
+}
+</table>
+
+<p>Count: <span id="count">@Model.Count()</span></p>
+
+@using (Html.BeginForm("Echo", "Home"))
+{
+    @Html.TextBox("message")
+    <input type="submit" id="send" value="Send" />
+}
+
+@section Footer {
+    <div id="section-footer">[index section]</div>
+}

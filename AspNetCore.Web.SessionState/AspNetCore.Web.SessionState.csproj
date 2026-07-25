@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+    <Import Project="$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.props" Condition="Exists('$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.props')" />
+    <!--
+    Out-of-process session state: <sessionState mode="StateServer"> and mode="SQLServer".
+
+    Why this is a separate assembly rather than part of Core.Web.
+
+    Neither store can be built from Mono's sources. Mono implements StateServer over .NET Remoting,
+    which is a CLR feature CoreCLR does not have, and its SQLServer handler targets a Mono-specific
+    `Sessions` table through a Mono.Data.Sqlite factory - not the ASPState database that a migrating
+    application already has provisioned. Both are written fresh here.
+
+    Keeping them out of Core.Web also keeps Microsoft.Data.SqlClient out of it. Core.Web is referenced
+    by every application whether or not it uses session state at all, and a SQL client is a large and
+    frequently-updated dependency to force on all of them.
+
+    SessionStateModule reaches these types by assembly-qualified NAME (see Tools/port-patches.txt), so
+    Core.Web has no compile-time reference in this direction - the provider model loads them at
+    runtime, which is exactly what it is for.
+  -->
+    <PropertyGroup>
+        <PackageOutputPath>$(SolutionDir)Packages/</PackageOutputPath>
+        <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+        <Version>$(VersionPrefix).$(VersionSuffix)</Version>
+        <TargetFramework>net10.0</TargetFramework>
+        <AssemblyName>Core.Web.SessionState</AssemblyName>
+        <RootNamespace>System.Web.SessionState</RootNamespace>
+        <LangVersion>latest</LangVersion>
+        <Nullable>disable</Nullable>
+        <ImplicitUsings>disable</ImplicitUsings>
+        <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+        <!-- Microsoft.Data.SqlClient requires 9.x; the port's shared default of 8.0.0 would be a
+         downgrade, which NuGet treats as an error. Compile assets are excluded either way. -->
+        <WebFormsPortConfigurationManagerVersion>9.0.11</WebFormsPortConfigurationManagerVersion>
+        <PackageId>AspNet$(AssemblyName)</PackageId>
+        <Description>Out-of-process session state on .NET 10 - &lt;sessionState mode="StateServer"&gt; over IDistributedCache and mode="SQLServer" against a standard ASPState database.</Description>
+    </PropertyGroup>
+    <ItemGroup>
+        <!-- IDistributedCache lives in the shared framework; no package needed for the StateServer store. -->
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.6" />
+        <PackageReference Include="Net4x.NuGetUtility" Version="$(NuGetUtilityVersion)" PrivateAssets="All" />
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\AspNetCore.Web\AspNetCore.Web.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+        <!-- aspnet_regsql.exe does not exist on .NET 10, so the DDL ships here instead. -->
+        <EmbeddedResource Include="Schema\ASPState.sql" />
+    </ItemGroup>
+    <PropertyGroup>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+    </PropertyGroup>
+    <ItemGroup>
+        <Content Include="README.md" Link="README.md" Pack="true" PackagePath="\README.md" />
+        <!-- Travels with the package: an SPDX expression says WHICH licences apply, not to which
+             files. See Directory.Build.props for why the expression is set explicitly. -->
+        <Content Include="$(MSBuildThisFileDirectory)..\THIRD-PARTY-NOTICES.md" Link="THIRD-PARTY-NOTICES.md" Pack="true" PackagePath="\THIRD-PARTY-NOTICES.md" />
+    </ItemGroup>
+    <Import Project="..\Build\WebFormsPort.targets" />
+    <Import Project="$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.targets" Condition="Exists('$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.targets')" />
+</Project>

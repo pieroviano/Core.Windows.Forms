@@ -1,0 +1,20 @@
+<Project>
+    <PropertyGroup>
+        <NuGetPackageRoot Condition="'$(NuGetPackageRoot)'=='' and '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' == 'true'">$(USERPROFILE)\.nuget\packages\</NuGetPackageRoot>
+        <NuGetPackageRoot Condition="'$(NuGetPackageRoot)'=='' and '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' != 'true'">~/.nuget/packages/</NuGetPackageRoot>
+        <VersionBuildSuffix Condition="'$(Configuration)'!='Release'">*</VersionBuildSuffix>
+        <VersionBuildSuffix Condition="'$(Configuration)'=='Release'">*</VersionBuildSuffix>
+        <NuGetUtilityVersion Condition="'$(NuGetUtilityVersion)' == ''">1.0.10</NuGetUtilityVersion>
+        <DirectoryNuGet>true</DirectoryNuGet>
+        <NuGetPackageRoot Condition="'$(NuGetPackageRoot)' == '' and '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' == 'true'">$(USERPROFILE)\.nuget\packages\</NuGetPackageRoot>
+        <NuGetPackageRoot Condition="'$(NuGetPackageRoot)' == '' and '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' != 'true'">~/.nuget/packages/</NuGetPackageRoot>
+        <VersionBuildSuffix Condition="'$(Configuration)' != 'Release'">*</VersionBuildSuffix>
+        <VersionBuildSuffix Condition="'$(Configuration)' == 'Release'">*</VersionBuildSuffix>
+        <VersionBuildSuffix Condition="'$(VersionBuildSuffix)'==''">*</VersionBuildSuffix>
+        <VersionBuildSuffix Condition="'$(VersionBuildSuffix)' == ''">*</VersionBuildSuffix>
+        <NuGetUtilityVersion Condition="'$(NuGetUtilityVersion)'==''">1.0.10</NuGetUtilityVersion>
+        <AspNetCoreWebVersion>1.0.0</AspNetCoreWebVersion>
+        <NuGetUtilityVersion>1.0.9</NuGetUtilityVersion>
+        <ObfuscarVersion>2.2.37</ObfuscarVersion>
+    </PropertyGroup>
+</Project>

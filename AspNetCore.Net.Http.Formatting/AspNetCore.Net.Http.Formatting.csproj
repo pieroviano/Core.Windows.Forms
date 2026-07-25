@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+    <Import Project="$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.props" Condition="Exists('$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.props')" />
+    <!--
+    System.Net.Http.Formatting - Web API's media-type formatters: JSON, XML, form-url-encoded and
+    multipart, plus the content negotiation that picks between them.
+
+    Json.NET comes from the NuGet package, NOT from the copy vendored in mono/external/Newtonsoft.Json
+    that the upstream manifest lists - see tools/port-exclusions.txt. That copy predates .NET Core and
+    does not compile here. Using the package also means an application's own Newtonsoft types are the
+    same types this formatter produces, rather than a private duplicate.
+  -->
+    <PropertyGroup>
+        <PackageOutputPath>$(SolutionDir)Packages/</PackageOutputPath>
+        <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+        <Version>$(VersionPrefix).$(VersionSuffix)</Version>
+        <TargetFramework>net10.0</TargetFramework>
+        <LangVersion>latest</LangVersion>
+        <Nullable>disable</Nullable>
+        <ImplicitUsings>disable</ImplicitUsings>
+        <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+        <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+        <NoWarn>$(NoWarn);612;618;436;1591;0108;0114;0067;0162;0169;0219;0414;0649;3021;SYSLIB0003;SYSLIB0011;SYSLIB0012;SYSLIB0021;SYSLIB0022;SYSLIB0023;CS8981</NoWarn>
+        <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+        <WarningLevel>0</WarningLevel>
+        <DebugType>portable</DebugType>
+        <AssemblyName>Core.Net.Http.Formatting</AssemblyName>
+        <RootNamespace>System.Net.Http.Formatting</RootNamespace>
+        <DefineConstants>$(DefineConstants);ASPNETMVC</DefineConstants>
+        <DefineConstants>$(DefineConstants);NET_4_0;NET_4_5;MONO;SYSTEM_WEB_PORT</DefineConstants>
+        <PackageId>AspNet$(AssemblyName)</PackageId>
+        <Description>The System.Net.Http.Formatting types Web API is built on - media-type formatters, content negotiation and the formatter collection.</Description>
+        <!-- Apache-2.0 for the aspnetwebstack sources this compiles, MIT for Mono's AssemblyInfo.cs and
+             this port's own code. See Directory.Build.props for why the expression must be explicit. -->
+        <PortLicenseExpression>Apache-2.0 AND MIT</PortLicenseExpression>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="Net4x.NuGetUtility" Version="$(NuGetUtilityVersion)" PrivateAssets="All" />
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    </ItemGroup>
+    <PropertyGroup>
+        <AspNetWebStackDir>$(MSBuildThisFileDirectory)..\Mono\external\aspnetwebstack\src\</AspNetWebStackDir>
+    </PropertyGroup>
+    <ItemGroup>
+        <!-- Upstream declares these manifest names explicitly (Makefile RESOURCE_DEFS) and the
+         generated SRResources/Resources classes look them up at runtime. Every error message
+         comes through them - including the one HttpResponseException's own constructor reads,
+         which is why a missing name surfaces as a 500 from a controller that meant to say 404. -->
+        <EmbeddedResource Include="$(AspNetWebStackDir)Common\CommonWebApiResources.resx" LogicalName="System.Net.Http.Properties.CommonWebApiResources.resources" />
+        <EmbeddedResource Include="$(AspNetWebStackDir)System.Net.Http.Formatting\Properties\Resources.resx" LogicalName="System.Net.Http.Properties.Resources.resources" />
+    </ItemGroup>
+    <!-- Upstream sources, compiled in place. Regenerate with: Tools/gen-sources.ps1 -->
+    <ItemGroup>
+        <!-- MediaTypeFormatter reads aspnet:MaxHttpCollectionKeys from ConfigurationManager.AppSettings.
+         Upstream's LIB_REFS lists System.Configuration for exactly this, and in this port that means
+         Core.Configuration - the packaged ConfigurationManager's compile assets are stripped by
+         Build/WebFormsPort.targets so everything binds to the ported one instead. -->
+        <ProjectReference Include="..\AspNetCore.Configuration\AspNetCore.Configuration.csproj" />
+    </ItemGroup>
+    <Import Project="Sources.generated.props" />
+    <ItemGroup>
+        <Compile Include="Generated\**\*.cs" />
+        <Compile Include="Overrides\**\*.cs" />
+        <Compile Include="Port\**\*.cs" />
+    </ItemGroup>
+    <!-- Removes the empty .NET System.Web.dll facade; see the file for why this is not optional. -->
+    <PropertyGroup>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+    </PropertyGroup>
+    <ItemGroup>
+        <Content Include="README.md" Link="README.md" Pack="true" PackagePath="\README.md" />
+        <!-- Travels with the package: an SPDX expression says WHICH licences apply, not to which
+             files. See Directory.Build.props for why the expression is set explicitly. -->
+        <Content Include="$(MSBuildThisFileDirectory)..\THIRD-PARTY-NOTICES.md" Link="THIRD-PARTY-NOTICES.md" Pack="true" PackagePath="\THIRD-PARTY-NOTICES.md" />
+    </ItemGroup>
+    <Import Project="..\Build\WebFormsPort.targets" />
+    <Import Project="$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.targets" Condition="Exists('$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.targets')" />
+</Project>

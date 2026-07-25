@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk.Web">
+    <Import Project="$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.props" Condition="Exists('$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.props')" />
+    <PropertyGroup>
+        <!-- Every port assembly is packable; only tests and samples are not. -->
+        <PackageOutputPath>$(SolutionDir)Packages/</PackageOutputPath>
+        <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+        <!-- Microsoft.NET.Sdk.Web defaults IsPackable to false; this project is a library that
+         ships the hosting API and the build/ props+targets, so it has to opt back in. -->
+        <IsPackable>true</IsPackable>
+        <Version>$(VersionPrefix).$(VersionSuffix)</Version>
+        <TargetFramework>net10.0</TargetFramework>
+        <AssemblyName>Core.Web.Hosting.Kestrel</AssemblyName>
+        <RootNamespace>System.Web.Hosting.Kestrel</RootNamespace>
+        <OutputType>Library</OutputType>
+        <Nullable>disable</Nullable>
+        <ImplicitUsings>disable</ImplicitUsings>
+        <LangVersion>latest</LangVersion>
+        <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+        <!-- This project is new code, so it is held to normal standards unlike the ported tree. -->
+        <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+        <PackageId>AspNet$(AssemblyName)</PackageId>
+        <Description>Hosts a ported ASP.NET application under Kestrel: app.UseWebForms (), the request adapter, and the MSBuild assets that remove the empty .NET System.Web facade and copy your content files. Start here.</Description>
+    </PropertyGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\AspNetCore.Web\AspNetCore.Web.csproj" />
+        <!-- Deployed with every application so the ScriptManager/UpdatePanel registrations in
+         root-web.config can resolve. Nothing here compiles against it; it is loaded by name.
+         NOT optional: gen-config.ps1 retargets root-web.config's ScriptModule-4.0 at
+         Core.Web.Extensions, and <httpModules> entries are instantiated at application start - so
+         when this assembly is absent EVERY request fails with FileNotFoundException, not just the
+         ones using an UpdatePanel. -->
+        <ProjectReference Include="..\AspNetCore.Web.Extensions\AspNetCore.Web.Extensions.csproj" />
+        <!-- The .asmx / SOAP serving stack, deployed so WebServiceHandlerFactory resolves by name. -->
+        <!-- Speaks the packaged System.Configuration's dialect so third-party libraries reading
+         ConfigurationManager.AppSettings/ConnectionStrings see web.config. -->
+        <ProjectReference Include="..\AspNetCore.Web.ConfigBridge\AspNetCore.Web.ConfigBridge.csproj" />
+        <ProjectReference Include="..\AspNetCore.Web.Services\AspNetCore.Web.Services.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+        <!-- Shipped in the package's build/ folder, so any project referencing this package gets the
+         facade removal, the content globs and the classic code-behind nesting without configuring
+         anything.
+
+         PackagePath RENAMES them, and that rename is load-bearing: NuGet auto-imports exactly
+         build/$(PackageId).props and build/$(PackageId).targets, and nothing else. The files are
+         named after the ASSEMBLY (Core.Web.Hosting.Kestrel) because that is how projects inside this
+         repository import them by path; the PACKAGE is AspNetCore.Web.Hosting.Kestrel. Ship them
+         under their own names and NuGet silently imports neither - no error, just a consumer whose
+         build has no facade removal and therefore dies with CS0433 or a first-request
+         TypeLoadException. Deriving the packed name from $(PackageId) keeps the two in step even if
+         the id changes again. -->
+        <None Include="build\Core.Web.Hosting.Kestrel.props" Pack="true" PackagePath="build\$(PackageId).props" />
+        <None Include="build\Core.Web.Hosting.Kestrel.targets" Pack="true" PackagePath="build\$(PackageId).targets" />
+        <!-- Packed alongside them, and imported by the .targets above. Removing the empty framework
+         System.Web/System.Configuration facades is mandatory for EVERY consumer, so a project that
+         gets the port from NuGet has to receive this too - otherwise the PackageReference route is
+         broken by construction and the failure is a CS0433 the consumer cannot act on. Packed from
+         its own location rather than copied, so there is one source of truth. -->
+        <None Include="..\Build\WebFormsPort.targets" Pack="true" PackagePath="build\" />
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Net4x.NuGetUtility" Version="$(NuGetUtilityVersion)" PrivateAssets="All" />
+    </ItemGroup>
+    <!-- Removes the empty .NET System.Web.dll facade; see the file for why this is not optional. -->
+    <PropertyGroup>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+    </PropertyGroup>
+    <ItemGroup>
+        <Content Include="README.md" Link="README.md" Pack="true" PackagePath="\README.md" />
+        <!-- Travels with the package: an SPDX expression says WHICH licences apply, not to which
+             files. See Directory.Build.props for why the expression is set explicitly. -->
+        <Content Include="$(MSBuildThisFileDirectory)..\THIRD-PARTY-NOTICES.md" Link="THIRD-PARTY-NOTICES.md" Pack="true" PackagePath="\THIRD-PARTY-NOTICES.md" />
+    </ItemGroup>
+    <Import Project="..\build\WebFormsPort.targets" />
+    <Import Project="$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.targets" Condition="Exists('$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.targets')" />
+</Project>

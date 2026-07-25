@@ -1,0 +1,56 @@
+<Project>
+
+	<!--
+		Imported after every project body, which is the only place this can work.
+
+		Net4x.NuGetUtility's props - a NuGet build asset, so imported at the very top, before anything
+		here has run - packs the SOLUTION's README.md into every package:
+
+			<None Condition="Exists('$(SolutionDir)README.md')"
+			      Include="$(SolutionDir)README.md" Pack="true" PackagePath="\" />
+
+		Every packable project here also packs its OWN README.md to \README.md, because a package whose
+		readme describes the whole repository tells a consumer nothing about the one assembly they just
+		referenced. The two collide on the same path, and pack reports it 34 times per build:
+
+			warning NU5118: File '...\README.md' is not added because the package already contains
+			                file '\README.md'
+
+		The project's own README wins the race today, so the packages are correct - but only by
+		ordering, and 34 lines of noise per build is where a real warning goes to hide. Remove the
+		solution-level item and the outcome becomes the one that was intended rather than the one that
+		happened.
+
+		Scoped to packable projects: a test project has no README of its own and nothing to collide
+		with, so removing the item there would change nothing and hide the mechanism.
+	-->
+	<ItemGroup Condition="'$(IsPackable)' != 'false' AND Exists('$(MSBuildProjectDirectory)\README.md')">
+		<None Remove="$(SolutionDir)README.md" />
+	</ItemGroup>
+
+	<!--
+		The licence, applied here for the same reason and by the same mechanism.
+
+		Net4x.NuGetUtility.targets contains:
+
+			<PropertyGroup Condition="'$(PackageLicenseUrl)'=='' and '$(PackageLicenseFile)'==''">
+				<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+
+		Note what the condition tests: PackageLicenseUrl and PackageLicenseFile. It does NOT test
+		PackageLicenseExpression, so a project that sets the expression - which is the modern, correct
+		way to say this - still has it overwritten. And because that is a .targets file it is imported
+		AFTER Directory.Build.props and after the project body, so setting it in either place loses
+		silently. The symptom is 19 packages declaring Apache-2.0 no matter what they say about
+		themselves, including the eleven built entirely from MIT sources.
+
+		So the intent is carried in PortLicenseExpression, which nothing else touches, and applied here
+		- Directory.Build.targets being imported last. Defaulted in Directory.Build.props to MIT and
+		overridden per project by the eight built from Mono/external/aspnetwebstack.
+
+		THIRD-PARTY-NOTICES.md, packed by every project, records which component each licence covers.
+	-->
+	<PropertyGroup Condition="'$(IsPackable)' != 'false' AND '$(PortLicenseExpression)' != ''">
+		<PackageLicenseExpression>$(PortLicenseExpression)</PackageLicenseExpression>
+	</PropertyGroup>
+
+</Project>

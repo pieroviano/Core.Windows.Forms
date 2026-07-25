@@ -1,0 +1,51 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Functional tests for Tools/port-project.
+
+    Unlike every other suite here this one hosts no application, so it needs none of the
+    TemporaryFilesPath isolation the runtime suites do. What it does need is to keep its hands off
+    Fixtures/ - see the item excludes below.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <AssemblyName>AspNetCore.Web.PortTool.Tests</AssemblyName>
+    <RootNamespace>WebFormsPort.PortToolTests</RootNamespace>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!--
+      Fixtures/ holds LEGACY ASP.NET projects: .csproj files in the old format, and .cs/.vb files that
+      reference System.Web.Mvc and other assemblies that do not exist on net10.0. They are test DATA,
+      read off disk and copied to a temp directory - never compiled.
+
+      Without these excludes the SDK's default globs sweep them into this assembly and the suite fails
+      to build with a wall of CS0246, which reads as a broken test project rather than as
+      "the fixtures were compiled by mistake".
+    -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);Fixtures\**</DefaultItemExcludes>
+    <EnableDefaultContentItems>false</EnableDefaultContentItems>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Fixtures\**" />
+    <None Remove="Fixtures\**" />
+    <Content Remove="Fixtures\**" />
+    <EmbeddedResource Remove="Fixtures\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Tools\port-project\port-project.csproj" />
+  </ItemGroup>
+
+</Project>

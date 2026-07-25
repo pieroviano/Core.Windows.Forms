@@ -1,0 +1,46 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    End-to-end tests for the ported System.Web stack. They start a REAL Kestrel server on a loopback
+    port and drive it with a real HttpClient, rather than using TestServer: the whole point of this
+    port is "WebForms on Kestrel", and AspNetCoreWorkerRequest is written against behaviour TestServer
+    does not reproduce faithfully (chunked responses, the synchronous-IO guard, real header handling).
+
+    The application under test is Samples/WebFormsSample, referenced so that the types its web.config
+    names - WebFormsSample.TraceModule in <httpModules>, WebFormsSample.HelloHandler in <httpHandlers>,
+    WebFormsSample.DefaultPage as a code-behind - are resolvable. <httpModules> entries are
+    instantiated at application start, so without that reference every request fails.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>WebFormsPort.FunctionalTests</RootNamespace>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <IsPackable>false</IsPackable>
+    <!-- Content copied in from the referenced sample would shadow nothing and only confuses the
+         output directory; the tests read the sample from its source directory (see RepoPaths). -->
+    <EnableDefaultContentItems>false</EnableDefaultContentItems>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\AspNetCore.Web.Hosting.Kestrel\AspNetCore.Web.Hosting.Kestrel.csproj" />
+    <ProjectReference Include="..\..\Samples\WebFormsSample\WebFormsSample.csproj" />
+  </ItemGroup>
+
+  <!-- Removes the empty .NET System.Web.dll facade; see the file for why this is not optional.
+       It also asserts Core.Web.dll reached the output directory, which is exactly the failure this
+       suite would otherwise report as a confusing TypeLoadException on the first request. -->
+  <Import Project="..\..\Build\WebFormsPort.targets" />
+
+</Project>

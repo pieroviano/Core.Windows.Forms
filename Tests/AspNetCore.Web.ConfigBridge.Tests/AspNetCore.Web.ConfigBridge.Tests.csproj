@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Tests for Core.Web.ConfigBridge in isolation, against known values rather than web.config.
+
+    Its own project for a hard reason: PackagedConfigurationBridge.Install calls
+    ConfigurationManager.SetConfigurationSystem, which the packaged assembly permits exactly ONCE per
+    process and which fails if anything has already read configuration. Any process that has started
+    the WebForms runtime has already installed the real bridge, so the only way to test the install
+    path - including its "already initialised" and idempotency behaviour - is a process where nothing
+    else has touched configuration.
+
+    Note this project deliberately does NOT reference Core.Configuration, and neither does the
+    assembly under test: the whole design is that the packaged System.Configuration types and the
+    ported ones never appear in the same signature. Referencing both here would make the test lie
+    about which ConfigurationManager it is talking to.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>WebFormsPort.ConfigBridgeTests</RootNamespace>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <IsPackable>false</IsPackable>
+    <!-- Same switch the bridge itself sets: keeps build/WebFormsPort.targets from stripping the
+         ConfigurationManager package's compile assets, which this project must compile against. -->
+    <WebFormsPortIsConfigBridge>true</WebFormsPortIsConfigBridge>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="8.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\AspNetCore.Web.ConfigBridge\AspNetCore.Web.ConfigBridge.csproj" />
+  </ItemGroup>
+
+</Project>

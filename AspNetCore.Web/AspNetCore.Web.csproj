@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+    <Import Project="$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.props" Condition="Exists('$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.props')" />
+    <PropertyGroup>
+        <PackageOutputPath>$(SolutionDir)Packages/</PackageOutputPath>
+        <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+        <Version>$(VersionPrefix).$(VersionSuffix)</Version>
+        <TargetFramework>net10.0</TargetFramework>
+        <AssemblyName>Core.Web</AssemblyName>
+        <RootNamespace>System.Web</RootNamespace>
+        <LangVersion>latest</LangVersion>
+        <Nullable>disable</Nullable>
+        <ImplicitUsings>disable</ImplicitUsings>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+        <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+        <NoWarn>$(NoWarn);612;618;436;1591;0108;0114;0067;0162;0169;0219;0414;0649;3021;SYSLIB0003;SYSLIB0011;SYSLIB0012;SYSLIB0021;SYSLIB0022;SYSLIB0023;CS8981</NoWarn>
+        <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+        <WarningLevel>0</WarningLevel>
+        <DebugType>portable</DebugType>
+        <MonoSystemWebDir>$(MSBuildThisFileDirectory)..\mono\mcs\class\System.Web\</MonoSystemWebDir>
+        <MonoBuildCommonDir>$(MSBuildThisFileDirectory)..\mono\mcs\build\common\</MonoBuildCommonDir>
+        <DefineConstants>$(DefineConstants);INSIDE_SYSTEM_WEB</DefineConstants>
+        <DefineConstants>$(DefineConstants);NET_1_1;NET_2_0;NET_3_5;NET_4_0;NET_4_5</DefineConstants>
+        <DefineConstants>$(DefineConstants);SYSTEM_WEB_PORT</DefineConstants>
+        <DefineConstants>$(DefineConstants);MONO;FEATURE_PAL</DefineConstants>
+        <PackageId>AspNet$(AssemblyName).Base</PackageId>
+        <Description>System.Web for .NET 10 - WebForms pages, server controls, view state, session, caching, membership and output caching, ported from Mono and hosted under Kestrel. The assembly is Core.Web; namespaces are unchanged.</Description>
+    </PropertyGroup>
+    <ItemGroup>
+        <!-- 8.0.0 was never published; 9.0.0 is the lowest that exists for this line. Only the
+         code-*generation* half is used - CompileAssemblyFrom* throws on .NET Core and is
+         replaced by Port/RoslynCompiler.cs. -->
+        <PackageReference Include="System.CodeDom" Version="9.0.0" />
+        <PackageReference Include="System.Drawing.Common" Version="8.0.0" />
+        <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="8.0.0" />
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.8.0" />
+        <!-- VB WebForms: pages with Language="VB" are generated as VB source by VBCodeProvider and
+         compiled here. Both languages are always available, matching ASP.NET. -->
+        <PackageReference Include="Microsoft.CodeAnalysis.VisualBasic" Version="4.8.0" />
+        <!-- CAS types are inert metadata on .NET Core, but System.Web's public surface declares
+         them (AspNetHostingPermission lives in this assembly via type forward), so the
+         reference is required to compile - not a behavioural dependency. -->
+        <PackageReference Include="System.Security.Permissions" Version="8.0.0" />
+        <PackageReference Include="System.Data.SqlClient" Version="4.8.6" />
+        <!-- Pinned to 7.0.0: the 9.0.0 line drags ConfigurationManager up with it, and the config
+         bootstrap is verified against ConfigurationManager 8.0.0. Only AccessDataSource uses it. -->
+        <PackageReference Include="System.Data.OleDb" Version="7.0.0" />
+        <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="8.0.0" />
+        <PackageReference Include="Net4x.NuGetUtility" Version="$(NuGetUtilityVersion)" PrivateAssets="All" />
+    </ItemGroup>
+    <ItemGroup>
+        <!-- Mono's System.Configuration, ported. Replaces the System.Configuration.ConfigurationManager
+         package: the ported System.Web is written against Mono's configuration semantics (config
+         path model, Configuration.SaveStart/SaveEnd, FindLocationConfiguration, ConfigPath, and
+         friend access to protected internal ConfigurationElement members). The shipping assembly
+         rejects Mono's WebConfigurationHost outright - its ConfigPathUtility.IsValid forbids the
+         leading slash that Mono's config paths always carry. See PORT-System.Web-Kestrel-PLAN.md P4.
+
+         WITHOUT THIS REFERENCE the build fails with ~2000 errors, all of them CS0246 on
+         ConfigurationSection / ConfigurationProperty / ProviderSettings and friends. .NET ships an
+         empty System.Configuration.dll facade, so nothing else supplies those types. -->
+        <ProjectReference Include="..\AspNetCore.Configuration\AspNetCore.Configuration.csproj" />
+    </ItemGroup>
+    <!-- Upstream sources, compiled in place. Regenerate with: Tools/gen-sources.ps1 -->
+    <Import Project="Sources.generated.props" />
+    <ItemGroup>
+        <!-- Local additions: platform shims, generated files, and copies of upstream files
+         that needed surgery (an Overrides/X__Y.cs shadows mono's X/Y.cs). -->
+        <Compile Include="Shims\**\*.cs" />
+        <Compile Include="Generated\**\*.cs" />
+        <Compile Include="Overrides\**\*.cs" />
+        <Compile Include="Port\**\*.cs" />
+    </ItemGroup>
+    <ItemGroup>
+        <!-- Machine-level configuration, generated by tools/gen-config.ps1 from mono/data/net_4_5 and
+         extracted at runtime by Port/MachineConfig.cs. The root web.config is what registers
+         *.aspx -> PageHandlerFactory, so without these nothing is served. -->
+        <EmbeddedResource Include="Config\machine.config" LogicalName="System.Web.Config.machine.config" />
+        <EmbeddedResource Include="Config\root-web.config" LogicalName="System.Web.Config.root-web.config" />
+        <!-- The .asmx help page (what you see browsing a web service without ?wsdl). machine.config's
+         <wsdlHelpGenerator href="DefaultWsdlHelpGenerator.aspx"/> resolves relative to the machine
+         config directory, so Port/MachineConfig.cs extracts it alongside the config files. -->
+        <EmbeddedResource Include="Config\DefaultWsdlHelpGenerator.aspx" LogicalName="System.Web.Config.DefaultWsdlHelpGenerator.aspx" />
+        <EmbeddedResource Include="$(MonoSystemWebDir)resources\*.js" LogicalName="%(Filename)%(Extension)" />
+        <EmbeddedResource Include="$(MonoSystemWebDir)resources\*.gif" LogicalName="%(Filename)%(Extension)" />
+        <EmbeddedResource Include="$(MonoSystemWebDir)resources\*.html" LogicalName="%(Filename)%(Extension)" />
+        <EmbeddedResource Include="$(MonoSystemWebDir)System.Web.UI.WebControls\MenuModern.js" LogicalName="MenuModern.js" />
+        <EmbeddedResource Include="$(MonoSystemWebDir)resources\TranslationResources.resx" LogicalName="TranslationResources.resources" />
+    </ItemGroup>
+    <!-- Removes the empty .NET System.Web.dll facade; see the file for why this is not optional. -->
+    <PropertyGroup>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+    </PropertyGroup>
+    <ItemGroup>
+        <Content Include="README.md" Link="README.md" Pack="true" PackagePath="\README.md" />
+        <!-- Travels with the package: an SPDX expression says WHICH licences apply, not to which
+             files. See Directory.Build.props for why the expression is set explicitly. -->
+        <Content Include="$(MSBuildThisFileDirectory)..\THIRD-PARTY-NOTICES.md" Link="THIRD-PARTY-NOTICES.md" Pack="true" PackagePath="\THIRD-PARTY-NOTICES.md" />
+    </ItemGroup>
+    <Import Project="..\build\WebFormsPort.targets" />
+    <Import Project="$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.targets" Condition="Exists('$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.targets')" />
+</Project>

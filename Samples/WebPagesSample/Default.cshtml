@@ -1,0 +1,34 @@
+@{
+    // A standalone Web Pages file: no controller, no route entry. The request maps straight to it.
+    Layout = "~/_Layout.cshtml";
+    Page.Title = "Home";
+
+    var widgets = new [] {
+        new { Name = "sprocket", Qty = 1 },
+        new { Name = "flange",   Qty = 2 },
+        new { Name = "grommet",  Qty = 3 },
+    };
+}
+<h1 id="heading">Web Pages</h1>
+
+<p id="sum">@(6 * 7)</p>
+<p id="setting">@System.Configuration.ConfigurationManager.AppSettings["site.name"]</p>
+
+<ul id="widgets">
+@foreach (var widget in widgets)
+{
+    <li>@widget.Name = @widget.Qty</li>
+}
+</ul>
+
+<p id="encoded">@("<script>alert(1)</script>")</p>
+
+<form method="post" action="">
+    <input type="text" name="who" id="who" value="@Request.Form["who"]" />
+    <input type="submit" id="send" value="Greet" />
+</form>
+
+@if (IsPost)
+{
+    <p id="greeting">Hello, @Request.Form["who"]!</p>
+}

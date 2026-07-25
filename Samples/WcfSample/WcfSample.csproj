@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <!-- The package ships these in its build/ folder and NuGet imports them automatically for a
+       PackageReference. These samples use a ProjectReference instead, which carries no build/ assets,
+       so they are imported by hand to get the same result: the content globs, App_Code handling and
+       code-behind nesting that every ported project would otherwise repeat. -->
+  <Import Project="..\..\AspNetCore.Web.Hosting.Kestrel\build\Core.Web.Hosting.Kestrel.props" />
+
+  <!--
+    A .svc (WCF) endpoint hosted alongside the ported System.Web.
+
+    The .svc file is CONTENT - read at startup for its @ServiceHost directive, never compiled - and
+    "**\*.svc" is in the package's default content globs, so nothing here has to say so.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\AspNetCore.Web.Hosting.Kestrel\AspNetCore.Web.Hosting.Kestrel.csproj" />
+    <ProjectReference Include="..\..\AspNetCore.Web.ServiceModel\AspNetCore.Web.ServiceModel.csproj" />
+  </ItemGroup>
+
+  <Import Project="..\..\Build\WebFormsPort.targets" />
+
+  <Import Project="..\..\AspNetCore.Web.Hosting.Kestrel\build\Core.Web.Hosting.Kestrel.targets" />
+
+</Project>

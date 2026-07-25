@@ -1,0 +1,27 @@
+@using MvcSample.Controllers
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
+<head><title>Async view</title></head>
+<body>
+    <h1>Async view</h1>
+
+    @* An implicit expression starting with await - what Razor v2's parser could not read. *@
+    <p id="implicit">@await SlowData.LoadAsync("implicit")</p>
+
+    @* And one inside a code block, which needs the generated method to be async. *@
+    @{
+        var count = await SlowData.CountAsync();
+    }
+    <p id="block">count:@count</p>
+
+    @* Chained member access after the await, to prove the parser keeps reading past the call. *@
+    <p id="chained">@await SlowData.LoadAsync("chained")</p>
+
+    @* The word "await" inside a literal must NOT make this view async on its own - see
+       AsyncViewSupport.MentionsAwait. It is here so the word-boundary check is exercised. *@
+    <p id="literal">awaiting and awaited are just words</p>
+</body>
+</html>

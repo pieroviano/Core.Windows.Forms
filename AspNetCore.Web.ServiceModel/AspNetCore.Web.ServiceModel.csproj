@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+    <Import Project="$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.props" Condition="Exists('$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.props')" />
+    <!--
+    .svc hosting for the port.
+
+    This assembly is NOT a port of System.ServiceModel. Mono's is 912 source files and pulls in
+    System.Runtime.Serialization, System.IdentityModel and System.ServiceModel.Internals; and WCF's
+    server side does not exist on .NET at all. CoreWCF is the supported server-side implementation,
+    and it is what actually serves SOAP here.
+
+    What this adds is the piece CoreWCF deliberately does not have: the ASP.NET .svc convention.
+    CoreWCF is configured in code, by naming service and contract types at startup. A ported
+    application instead has .svc FILES carrying an @ServiceHost directive, and URLs that point at
+    them. This reads those files, resolves the types they name, and registers each one with CoreWCF at
+    the address its own path implies - so existing .svc endpoints keep their URLs and their contracts.
+  -->
+    <PropertyGroup>
+        <PackageOutputPath>$(SolutionDir)Packages/</PackageOutputPath>
+        <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+        <Version>$(VersionPrefix).$(VersionSuffix)</Version>
+        <TargetFramework>net10.0</TargetFramework>
+        <AssemblyName>Core.Web.ServiceModel</AssemblyName>
+        <RootNamespace>System.Web.ServiceModel</RootNamespace>
+        <LangVersion>latest</LangVersion>
+        <Nullable>disable</Nullable>
+        <ImplicitUsings>disable</ImplicitUsings>
+        <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+        <PackageId>AspNet$(AssemblyName)</PackageId>
+        <Description>Hosts .svc (WCF) endpoints on .NET 10 through CoreWCF, at the path each .svc file sits at, keeping your existing URLs and contracts.</Description>
+    </PropertyGroup>
+    <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="CoreWCF.Primitives" Version="1.9.1" />
+        <PackageReference Include="CoreWCF.Http" Version="1.9.1" />
+        <PackageReference Include="Net4x.NuGetUtility" Version="$(NuGetUtilityVersion)" PrivateAssets="All" />
+    </ItemGroup>
+    <ItemGroup>
+        <!-- For HostingEnvironment and the application's physical path. -->
+        <ProjectReference Include="..\AspNetCore.Web\AspNetCore.Web.csproj" />
+    </ItemGroup>
+    <PropertyGroup>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+    </PropertyGroup>
+    <ItemGroup>
+        <Content Include="README.md" Link="README.md" Pack="true" PackagePath="\README.md" />
+        <!-- Travels with the package: an SPDX expression says WHICH licences apply, not to which
+             files. See Directory.Build.props for why the expression is set explicitly. -->
+        <Content Include="$(MSBuildThisFileDirectory)..\THIRD-PARTY-NOTICES.md" Link="THIRD-PARTY-NOTICES.md" Pack="true" PackagePath="\THIRD-PARTY-NOTICES.md" />
+    </ItemGroup>
+    <Import Project="..\Build\WebFormsPort.targets" />
+    <Import Project="$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.targets" Condition="Exists('$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.targets')" />
+</Project>

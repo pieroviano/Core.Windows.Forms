@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <!-- The package ships these in its build/ folder and NuGet imports them automatically for a
+       PackageReference. These samples use a ProjectReference instead, which carries no build/ assets,
+       so they are imported by hand to get the same result. Order matters: the .props declares the
+       switches, the .targets declares the items and must come after the SDK's own globs.
+
+       Everything those two files now do - the content globs, App_Code, the code-behind nesting - used
+       to be forty lines of boilerplate in this file. That is the whole point: a ported project should
+       not have to repeat it. -->
+  <Import Project="..\..\AspNetCore.Web.Hosting.Kestrel\build\Core.Web.Hosting.Kestrel.props" />
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\AspNetCore.Web.Hosting.Kestrel\AspNetCore.Web.Hosting.Kestrel.csproj" />
+    <!-- Stands in for a third-party dependency compiled against the real ConfigurationManager
+         package; proves the ConfigBridge routes its configuration reads at web.config. -->
+    <ProjectReference Include="..\..\tools\thirdparty-probe\thirdparty-probe.csproj" />
+  </ItemGroup>
+
+  <!-- Removes the empty .NET System.Web.dll facade; see the file for why this is not optional. -->
+  <Import Project="..\..\build\WebFormsPort.targets" />
+
+  <Import Project="..\..\AspNetCore.Web.Hosting.Kestrel\build\Core.Web.Hosting.Kestrel.targets" />
+
+</Project>

@@ -1,0 +1,98 @@
+<Project>
+
+	<!--
+    $(SolutionDir) with a dependable value.
+
+    Every packable project sets <PackageOutputPath>$(SolutionDir)Packages/</PackageOutputPath>, and
+    SolutionDir is only defined by Visual Studio and by `dotnet build` on a .sln - NOT on a .slnx, and
+    not when a single project is built directly. Left empty it resolves to "Packages/" relative to the
+    PROJECT, so the .nupkg lands in AspNetCore.Web.ConfigBridge\Packages\ instead of the repository
+    feed. Nothing fails; the package is simply not where anything looks for it, and a consumer
+    restoring from the local feed gets NU1101 for a package that was definitely built.
+
+    This file sits at the repository root, so MSBuildThisFileDirectory is exactly the value wanted -
+    and it already carries the trailing slash the property is concatenated against.
+  -->
+	<PropertyGroup>
+		<SolutionDir Condition="'$(SolutionDir)' == ''">$(MSBuildThisFileDirectory)</SolutionDir>
+	</PropertyGroup>
+
+	<!--
+    Strong-names every assembly in the repository with SignKey.snk.
+
+    One place rather than per project, because the key has to be identical everywhere: a strong-named
+    assembly may only grant InternalsVisibleTo to another strong-named assembly, and the friend has to
+    be named WITH ITS PUBLIC KEY. This port has three such grants (Core.Configuration -> Core.Web,
+    Core.Web -> Core.Web.Extensions, Core.Web -> Core.Web.Hosting.Kestrel), and they are written
+    against the key below. Sign one project with a different key and those break with CS0281.
+
+    What this does NOT do is make the port satisfy references to Microsoft's assemblies. Third-party
+    code compiled against "System.Web, PublicKeyToken=b03f5f7f11d50a3a" still cannot bind here: .NET
+    relaxes version when binding but never the public key, and that is Microsoft's key, not ours. See
+    build/WebFormsPort.targets. Signing gives the port its own identity; it does not let it
+    impersonate another.
+  -->
+	<PropertyGroup>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<RepositoryUrl>https://github.com/pieroviano/AspNetCore.Web.git</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+		<PackageProjectUrl>https://github.com/pieroviano/AspNetCore.Web</PackageProjectUrl>
+		<Authors>Piero Viano</Authors>
+		<Company>Piero Viano</Company>
+		<Product>AspNetCore.Web.Kestrel</Product>
+		<AssemblyVersion>1.0.0.0</AssemblyVersion>
+		<Copyright>Copyright (c) Piero Viano. All rights reserved.</Copyright>
+
+		<!--
+      Licensing. The DEFAULT is MIT, which is right for every package built from Mono's class
+      libraries and for the five that are entirely port-authored. The eight built from
+      Mono/external/aspnetwebstack override it below with "Apache-2.0 AND MIT" - Microsoft released
+      the ASP.NET Web Stack under Apache 2.0, and each of those assemblies also compiles Mono's
+      AssemblyInfo.cs and this port's own code, which are MIT. Both are permissive and compatible;
+      the compound expression is simply what is true.
+
+      This has to be stated explicitly. Net4x.NuGetUtility.targets supplies Apache-2.0 for ANY
+      package that sets neither PackageLicenseUrl nor PackageLicenseFile, so leaving it unset does
+      not mean "unspecified" - it means every package claims Apache-2.0, including the eleven built
+      from MIT sources.
+
+      THIRD-PARTY-NOTICES.md travels with every package and names which upstream each part came
+      from; an SPDX expression says WHICH licences apply but not to which files.
+    -->
+		<PortLicenseExpression Condition="'$(PortLicenseExpression)' == ''">MIT</PortLicenseExpression>
+
+		<SignAssembly>true</SignAssembly>
+		<AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)SignKey.snk</AssemblyOriginatorKeyFile>
+		<!-- Full signing, not delay signing. Upstream's Makefiles use -delaysign because Mono built
+         against Microsoft's public key without holding the private one; we hold this key, so there is
+         nothing to defer and no skip-verification entry to register. -->
+		<DelaySign>false</DelaySign>
+		<PublicSign>false</PublicSign>
+		<MinimalDirectoryNuGetProps>true</MinimalDirectoryNuGetProps>
+	</PropertyGroup>
+
+	<!-- Package versions, including $(NuGetUtilityVersion) - which several projects both reference and
+       import their props/targets by. Undefined, it resolves to an empty string and restore fails with
+       "'.' is not a valid version string", naming neither the project nor the property. -->
+	<Import Project="$(MSBuildThisFileDirectory)Directory.Nuget.Props"
+			Condition="Exists('$(MSBuildThisFileDirectory)Directory.Nuget.Props')" />
+
+	<PropertyGroup>
+		<!-- The packable projects compose their package version as "$(VersionPrefix).$(VersionSuffix)".
+         Undefined, that evaluates to a bare "." and restore fails before anything is compiled, with
+         an error that names neither the project nor the property. Both are conditional so a build
+         server can pass its own - e.g. -p:VersionSuffix=$(BUILD_NUMBER). -->
+		<VersionPrefix Condition="'$(VersionPrefix)' == ''">1.0.0</VersionPrefix>
+		<VersionSuffix Condition="'$(VersionSuffix)' == ''">0</VersionSuffix>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<!-- The public key of SignKey.snk, for InternalsVisibleTo declarations that need to name it.
+         Token: 21eedd2f354dfe57. Regenerate with:
+             sn -p SignKey.snk pub.key && sn -tp pub.key -->
+		<WebFormsPortPublicKey>002400000480000094000000060200000024000052534131000400000100010041c23647581173cd64456781bdeca5d2d95f82d27af80d3ba54c1e34900913dc1f79062d3acbfc1fba568eb7a835d3f734282936d2bd45ab2fc29aff390fe59822ec16377170fdcc957e30e85f76bd7ad63a2fbbce94653498e10e91a9b0fc570b7ccf8a5aca0c32630ba2fefea28e61c4438cf7231f37ba35f62bff56d0bbf0</WebFormsPortPublicKey>
+	</PropertyGroup>
+
+</Project>

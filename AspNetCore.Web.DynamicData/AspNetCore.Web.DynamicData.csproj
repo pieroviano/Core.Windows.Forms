@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+    <Import Project="$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.props" Condition="Exists('$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.props')" />
+    <!--
+    ASP.NET Dynamic Data - the scaffolding that builds list/edit/detail pages from a data model.
+
+    Ported from Mono's System.Web.DynamicData, with one substitution. Dynamic Data reads its model
+    through an abstract DataModelProvider / TableProvider / ColumnProvider triple, and upstream ships
+    exactly one implementation of it: DLinq*, over LINQ to SQL. LINQ to SQL does not exist on .NET and
+    is not coming, so those four files are excluded and Port/QueryableDataModelProvider supplies the
+    same triple over IQueryable instead - which is what EF Core, a repository, or a list of objects all
+    are.
+
+    The scaffolding itself, the field templates, the routing and the metadata attributes are upstream's
+    and compile unchanged.
+  -->
+    <PropertyGroup>
+        <PackageOutputPath>$(SolutionDir)Packages/</PackageOutputPath>
+        <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+        <Version>$(VersionPrefix).$(VersionSuffix)</Version>
+        <TargetFramework>net10.0</TargetFramework>
+        <AssemblyName>Core.Web.DynamicData</AssemblyName>
+        <RootNamespace>System.Web.DynamicData</RootNamespace>
+        <PackageId>AspNet$(AssemblyName)</PackageId>
+        <Description>ASP.NET Dynamic Data on .NET 10 - scaffolded list, detail and edit pages driven by your model, running on IQueryable or EF Core instead of LINQ to SQL.</Description>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <LangVersion>latest</LangVersion>
+        <Nullable>disable</Nullable>
+        <ImplicitUsings>disable</ImplicitUsings>
+        <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+        <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+        <NoWarn>$(NoWarn);612;618;436;1591;0108;0114;0067;0162;0169;0219;0414;0649;3021;SYSLIB0003;SYSLIB0011;SYSLIB0012;SYSLIB0021;SYSLIB0022;SYSLIB0023;CS8981</NoWarn>
+        <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+        <WarningLevel>0</WarningLevel>
+        <DebugType>portable</DebugType>
+        <DefineConstants>$(DefineConstants);NET_4_0;NET_4_5;MONO;SYSTEM_WEB_PORT</DefineConstants>
+    </PropertyGroup>
+    <!-- Upstream sources, compiled in place. Regenerate with: Tools/gen-sources.ps1 -->
+    <Import Project="Sources.generated.props" />
+    <ItemGroup>
+        <Compile Include="Generated\**\*.cs" />
+        <Compile Include="Overrides\**\*.cs" />
+        <Compile Include="Port\**\*.cs" />
+        <Compile Include="Shims\**\*.cs" />
+    </ItemGroup>
+    <ItemGroup>
+        <!-- Every other packable project here references this, and the two that did not were the two
+             that shipped without a .snupkg: the package's props is what turns on IncludeSymbols and
+             SymbolPackageFormat=snupkg for a Debug pack. PrivateAssets="All" - it is build tooling,
+             not a dependency of the package. -->
+        <PackageReference Include="Net4x.NuGetUtility" Version="$(NuGetUtilityVersion)" PrivateAssets="All" />
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\AspNetCore.Web\AspNetCore.Web.csproj" />
+        <ProjectReference Include="..\AspNetCore.Web.Extensions\AspNetCore.Web.Extensions.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+        <Content Include="README.md" Link="README.md" Pack="true" PackagePath="\README.md" />
+        <!-- Travels with the package: an SPDX expression says WHICH licences apply, not to which
+             files. See Directory.Build.props for why the expression is set explicitly. -->
+        <Content Include="$(MSBuildThisFileDirectory)..\THIRD-PARTY-NOTICES.md" Link="THIRD-PARTY-NOTICES.md" Pack="true" PackagePath="\THIRD-PARTY-NOTICES.md" />
+    </ItemGroup>
+    <Import Project="..\Build\WebFormsPort.targets" />
+    <Import Project="$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.targets" Condition="Exists('$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.targets')" />
+</Project>

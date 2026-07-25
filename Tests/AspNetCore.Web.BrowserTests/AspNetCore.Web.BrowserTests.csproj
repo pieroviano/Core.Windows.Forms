@@ -1,0 +1,52 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Browser-driven tests: a real Chromium, driven by Playwright, against the sample application
+    running on a real Kestrel server.
+
+    These cover what an HttpClient cannot. The HTTP suite constructs postbacks by scraping __VIEWSTATE
+    and __EVENTVALIDATION out of the markup and posting them back - which proves the server side, but
+    assumes the page it rendered is one a browser could actually submit. A real browser submits the
+    form the way a user does, so a page that renders correct-looking HTML but is not actually usable
+    (a malformed <form>, a control whose name and id disagree, client script that throws) fails here
+    and nowhere else.
+
+    Separate project for the usual reason - the ported runtime hosts one application per process, and
+    `dotnet test` gives each project its own.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>WebFormsPort.BrowserTests</RootNamespace>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <IsPackable>false</IsPackable>
+    <EnableDefaultContentItems>false</EnableDefaultContentItems>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="Microsoft.Playwright" Version="1.61.0" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\AspNetCore.Web.Hosting.Kestrel\AspNetCore.Web.Hosting.Kestrel.csproj" />
+    <ProjectReference Include="..\..\Samples\WebFormsSample\WebFormsSample.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Shared with the HTTP suite rather than duplicated. -->
+    <Compile Include="..\AspNetCore.Web.FunctionalTests\Infrastructure\RepoPaths.cs"
+             Link="Infrastructure\RepoPaths.cs" />
+  </ItemGroup>
+
+  <!-- Removes the empty .NET System.Web.dll facade; see the file for why this is not optional. -->
+  <Import Project="..\..\Build\WebFormsPort.targets" />
+
+</Project>
