@@ -1,0 +1,113 @@
+<!--
+  Shared build logic for every project that consumes the ported System.Web (Core.Web.dll).
+
+  Background: .NET ships two assemblies that overlap with this port.
+
+    * System.Web.dll             - an EMPTY compatibility facade in Microsoft.NETCore.App
+                                   (0 exported types), stamped Version=4.0.0.0,
+                                   PublicKeyToken=b03f5f7f11d50a3a.
+    * System.Configuration.dll   - likewise EMPTY (0 exported types). The real types live in the
+                                   System.Configuration.ConfigurationManager package, which this
+                                   port replaces with Core.Configuration (Mono's implementation).
+    * System.Web.HttpUtility.dll - real, and exports exactly two types in the System.Web
+                                   namespace: HttpUtility and IHtmlString.
+
+  The port's assembly is deliberately named Core.Web rather than System.Web, because the .NET host
+  gives the shared framework precedence for assemblies it owns: an app-local System.Web.dll is never
+  loaded, so naming it that way produces a build that resolves at compile time and then fails at
+  startup with FileNotFoundException. Renaming sidesteps that entirely - namespaces are unchanged,
+  and HttpApplication.LoadType resolves unqualified config type names by scanning loaded assemblies.
+
+  What remains is a *type*-level collision: the port defines System.Web.HttpUtility and
+  System.Web.IHtmlString (Mono's implementations, which the rest of the ported tree is written
+  against), and so does System.Web.HttpUtility.dll. Any consumer referencing both gets CS0433. The
+  framework references are therefore removed below, so the port stays internally consistent instead
+  of half-using Mono's encoder and half the framework's.
+
+  Import this file from any project that references Core.Web, directly or transitively.
+-->
+<Project>
+
+  <!--
+    The System.Configuration.ConfigurationManager package arrives transitively through
+    System.Data.SqlClient, System.Data.OleDb, System.Diagnostics.PerformanceCounter and
+    System.Security.Permissions. Its types share every namespace and name with Core.Configuration
+    (Mono's implementation), so every use becomes CS0433 "exists in both".
+
+    Its COMPILE assets are removed below so the port binds to Core.Configuration, while the package's
+    assembly stays DEPLOYED: third-party libraries were compiled against its strong-named identity and
+    nothing else can satisfy them.
+
+    Two substitutions were tried first and neither can work, which is worth recording:
+
+      * a [TypeForwardedTo] facade named System.Configuration.ConfigurationManager - .NET relaxes the
+        version when binding but NOT the public key, and cc7b13ffcd2ddd51 is Microsoft's key, so an
+        unsigned facade is rejected with FileNotFoundException naming the full identity;
+      * an AssemblyLoadContext.Resolving hook returning Core.Configuration - rejected with
+        "Resolved assembly's simple name should be the same as of the requested assembly".
+
+    So the package keeps its identity and Core.Web.ConfigBridge instead installs an
+    IInternalConfigSystem into it at startup, pointing its GetSection at the ported configuration
+    system. A library reading ConfigurationManager.AppSettings then sees web.config.
+  -->
+
+  <!--
+    The version is a property because a project can be forced higher by its own dependencies -
+    Microsoft.Data.SqlClient, in Core.Web.SessionState, requires 9.x - and a downgrade here is a hard
+    NU1605 error. Raising it for that one project is safer than raising the floor for every project,
+    since the package's compile assets are excluded either way and only its deployed identity matters.
+  -->
+  <PropertyGroup>
+    <WebFormsPortConfigurationManagerVersion Condition="'$(WebFormsPortConfigurationManagerVersion)' == ''">8.0.0</WebFormsPortConfigurationManagerVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Configuration.ConfigurationManager"
+                      Version="$(WebFormsPortConfigurationManagerVersion)"
+                      ExcludeAssets="compile"
+                      Condition="'$(WebFormsPortIsConfigBridge)' != 'true'" />
+  </ItemGroup>
+
+  <Target Name="RemoveOverlappingFrameworkWebAssemblies"
+          AfterTargets="ResolveTargetingPackAssets"
+          BeforeTargets="ResolveAssemblyReferences">
+    <ItemGroup>
+      <_OverlappingFrameworkWebAssembly
+          Include="@(Reference)"
+          Condition="('%(Filename)%(Extension)' == 'System.Web.dll'
+                      Or '%(Filename)%(Extension)' == 'System.Web.HttpUtility.dll'
+                      Or '%(Filename)%(Extension)' == 'System.Configuration.dll')
+                     And '%(Reference.NuGetPackageId)' == 'Microsoft.NETCore.App.Ref'" />
+
+      <!-- The real ConfigurationManager package, wherever it arrives from in the transitive graph.
+           Matched on NuGetPackageId so only package-provided copies are dropped. -->
+      <_OverlappingFrameworkWebAssembly
+          Include="@(Reference)"
+          Condition="'%(Reference.NuGetPackageId)' == 'System.Configuration.ConfigurationManager'" />
+
+      <Reference Remove="@(_OverlappingFrameworkWebAssembly)" />
+    </ItemGroup>
+
+    <Message Condition="'@(_OverlappingFrameworkWebAssembly)' != ''"
+             Importance="low"
+             Text="Removed framework assemblies overlapping the ported System.Web: @(_OverlappingFrameworkWebAssembly->'%(Filename)', ', ')" />
+  </Target>
+
+
+  <!-- The failure mode when the port's assembly does not reach the output directory is a confusing
+       one (TypeLoadException on the first request rather than a build error), so assert it. -->
+  <Target Name="VerifyPortedSystemWebIsPresent"
+          AfterTargets="Build"
+          Condition="'$(OutputType)' == 'Exe'">
+    <!-- Only assert for applications that actually resolved a reference to Core.Web, directly or
+         transitively. ReferencePath is the post-RAR set, so it covers the common case of an app
+         referencing only Core.Web.Hosting.Kestrel - while leaving tools that use Core.Configuration
+         on its own alone. -->
+    <ItemGroup>
+      <_PortedSystemWebReference Include="@(ReferencePath)" Condition="'%(Filename)' == 'Core.Web'" />
+    </ItemGroup>
+    <Error Condition="'@(_PortedSystemWebReference)' != '' And !Exists('$(TargetDir)Core.Web.dll')"
+           Text="The ported System.Web (Core.Web.dll) was referenced but is missing from $(TargetDir). The empty .NET System.Web facade has probably displaced it - check that this project imports build/WebFormsPort.targets." />
+  </Target>
+
+</Project>

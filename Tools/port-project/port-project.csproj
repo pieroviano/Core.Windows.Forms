@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Converts a legacy ASP.NET project to this port, per PORTING-GUIDE.md.
+
+    Deliberately takes NO reference on the port itself. It reads and writes XML and text and never
+    touches a System.Web type; referencing Core.Web would drag WebFormsPort.targets and the facade
+    removal into a tool that has no use for either.
+
+    Not packed as a dotnet tool: this is run once per application, and "dotnet run" against the project
+    is how the guide already invokes Tools/verify-config.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AssemblyName>port-project</AssemblyName>
+    <RootNamespace>PortProject</RootNamespace>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- The tests drive Planner/PlanExecutor directly rather than shelling out to the built exe:
+         calling the API is what lets a test assert that a dry run and an applied run produce the SAME
+         plan object, which is the one invariant holding the two modes together. -->
+    <InternalsVisibleTo Include="AspNetCore.Web.PortTool.Tests" Key="002400000480000094000000060200000024000052534131000400000100010041c23647581173cd64456781bdeca5d2d95f82d27af80d3ba54c1e34900913dc1f79062d3acbfc1fba568eb7a835d3f734282936d2bd45ab2fc29aff390fe59822ec16377170fdcc957e30e85f76bd7ad63a2fbbce94653498e10e91a9b0fc570b7ccf8a5aca0c32630ba2fefea28e61c4438cf7231f37ba35f62bff56d0bbf0" />
+  </ItemGroup>
+
+</Project>

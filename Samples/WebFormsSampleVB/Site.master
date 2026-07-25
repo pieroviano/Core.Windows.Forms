@@ -1,0 +1,11 @@
+<%@ Master Language="VB" %>
+<%@ Register TagPrefix="asp" Namespace="System.Web.UI.WebControls" Assembly="Core.Web" %>
+<!DOCTYPE html>
+<html>
+<head runat="server"><title><asp:ContentPlaceHolder ID="TitleContent" runat="server" /></title></head>
+<body>
+  <div id="chrome-header">[vb master header]</div>
+  <asp:ContentPlaceHolder ID="MainContent" runat="server" />
+  <div id="chrome-footer">[vb master footer]</div>
+</body>
+</html>

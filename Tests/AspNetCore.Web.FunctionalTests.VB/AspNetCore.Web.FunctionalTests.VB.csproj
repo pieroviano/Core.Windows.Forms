@@ -1,0 +1,56 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    End-to-end tests for the VB.NET WebForms sample.
+
+    A SEPARATE PROJECT, not another test class in AspNetCore.Web.FunctionalTests, because the ported
+    runtime hosts exactly one application per process: WebFormsRuntimeHost.Initialize writes .appPath
+    and friends as AppDomain data and returns early on any later call, so a second application in the
+    same process would silently be served by the first one's physical path, configuration and
+    compiled-page cache. `dotnet test` runs each test project in its own process, which is the
+    isolation this needs.
+
+    The tests themselves are C#: they assert over HTTP, so the language they are written in is
+    irrelevant. What is under test is the VB compilation path inside the runtime - pages declaring
+    Language="VB", <compilation defaultLanguage="vb"> and an App_Code compiled by VBCodeProvider
+    through the Roslyn VB backend.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>WebFormsPort.FunctionalTests.VB</RootNamespace>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <IsPackable>false</IsPackable>
+    <EnableDefaultContentItems>false</EnableDefaultContentItems>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\AspNetCore.Web.Hosting.Kestrel\AspNetCore.Web.Hosting.Kestrel.csproj" />
+    <!-- Supplies WebFormsSampleVB.DefaultPage, named by Default.aspx's Inherits= directive. -->
+    <ProjectReference Include="..\..\Samples\WebFormsSampleVB\WebFormsSampleVB.vbproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Shared with the C# suite rather than duplicated: both need the same repository-root walk and
+         the same postback-form scraping. -->
+    <Compile Include="..\AspNetCore.Web.FunctionalTests\Infrastructure\RepoPaths.cs"
+             Link="Infrastructure\RepoPaths.cs" />
+    <Compile Include="..\AspNetCore.Web.FunctionalTests\Infrastructure\WebForm.cs"
+             Link="Infrastructure\WebForm.cs" />
+  </ItemGroup>
+
+  <!-- Removes the empty .NET System.Web.dll facade; see the file for why this is not optional. -->
+  <Import Project="..\..\Build\WebFormsPort.targets" />
+
+</Project>

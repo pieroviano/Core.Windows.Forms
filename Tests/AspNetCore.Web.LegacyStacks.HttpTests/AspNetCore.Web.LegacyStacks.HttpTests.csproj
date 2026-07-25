@@ -1,0 +1,57 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    End-to-end tests for Dynamic Data and LinqDataSource, against Samples/DynamicDataSample over real
+    HTTP.
+
+    Separate from AspNetCore.Web.LegacyStacks.Tests, which is a unit suite over the model provider, the
+    query parser and the serializer, and needs no server at all. This one hosts an application, so it
+    needs its own process - the ported runtime hosts one application per process - and it exists
+    because the unit suite could not have caught what it caught. Two bugs were found by the first page
+    this suite rendered, and neither was visible from the model:
+
+      * DynamicDataRouteHandler never published the request's MetaTable, so every scaffolded page threw
+        a NullReferenceException on its first line. The model was fine; nothing could reach it.
+      * StateManagedCollection saves its state as Triplet (List<int>, List<object>, List<object>), and
+        the port's ObjectStateFormatter has no native encoding for List<T> - so any GridView whose
+        columns had dirty view state threw NotSupportedException at save.
+
+    That is the argument for this project in one paragraph: a control can satisfy every API assertion
+    and still fail during page compilation, data binding or view-state round-tripping.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>WebFormsPort.LegacyStacksHttpTests</RootNamespace>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <EnableDefaultContentItems>false</EnableDefaultContentItems>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\AspNetCore.Web.Hosting.Kestrel\AspNetCore.Web.Hosting.Kestrel.csproj" />
+    <!-- Do not remove: the sample's pages compile against both of these. -->
+    <ProjectReference Include="..\..\AspNetCore.Web.DynamicData\AspNetCore.Web.DynamicData.csproj" />
+    <ProjectReference Include="..\..\AspNetCore.Web.Extensions\AspNetCore.Web.Extensions.csproj" />
+    <ProjectReference Include="..\..\Samples\DynamicDataSample\DynamicDataSample.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\AspNetCore.Web.FunctionalTests\Infrastructure\RepoPaths.cs"
+             Link="Infrastructure\RepoPaths.cs" />
+  </ItemGroup>
+
+  <Import Project="..\..\Build\WebFormsPort.targets" />
+
+</Project>

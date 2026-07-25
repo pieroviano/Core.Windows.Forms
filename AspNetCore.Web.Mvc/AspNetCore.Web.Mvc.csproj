@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+    <Import Project="$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.props" Condition="Exists('$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.props')" />
+    <!--
+    ASP.NET MVC 3, from mono/external/aspnetwebstack.
+
+    The upstream directory is System.Web.Mvc3 - a versioning artefact of mono's build - but the
+    namespace is System.Web.Mvc and so is this port's assembly, Core.Web.Mvc.
+
+    Nothing new is needed underneath it. MVC binds to System.Web.Routing and System.Web.Abstractions,
+    and Core.Web already compiles both (they were folded into System.Web.dll in .NET 4.0 and the
+    manifest follows suit), so the only dependencies are the Razor and WebPages assemblies ported
+    alongside this one.
+  -->
+    <PropertyGroup>
+        <!-- Every port assembly is packable, like the rest of the port. -->
+        <PackageOutputPath>$(SolutionDir)Packages/</PackageOutputPath>
+        <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+        <Version>$(VersionPrefix).$(VersionSuffix)</Version>
+        <TargetFramework>net10.0</TargetFramework>
+        <AssemblyName>Core.Web.Mvc</AssemblyName>
+        <RootNamespace>System.Web.Mvc</RootNamespace>
+        <LangVersion>latest</LangVersion>
+        <Nullable>disable</Nullable>
+        <ImplicitUsings>disable</ImplicitUsings>
+        <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+        <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+        <NoWarn>$(NoWarn);612;618;436;1591;0108;0114;0067;0162;0169;0219;0414;0649;3021;SYSLIB0003;SYSLIB0011;SYSLIB0012;SYSLIB0021;SYSLIB0022;SYSLIB0023;CS8981</NoWarn>
+        <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+        <WarningLevel>0</WarningLevel>
+        <DebugType>portable</DebugType>
+        <MvcUpstreamDir>$(MSBuildThisFileDirectory)..\Mono\external\aspnetwebstack\src\System.Web.Mvc\</MvcUpstreamDir>
+        <DefineConstants>$(DefineConstants);ASPNETMVC</DefineConstants>
+        <DefineConstants>$(DefineConstants);NET_4_0;NET_4_5;MONO;SYSTEM_WEB_PORT</DefineConstants>
+        <PackageId>AspNet$(AssemblyName)</PackageId>
+        <Description>ASP.NET MVC 4 on .NET 10 - controllers, Razor v2 views, model binding, TempData and async actions, plus [Route] attribute routing supplied by this port.</Description>
+        <!-- Apache-2.0 for the aspnetwebstack sources this compiles, MIT for Mono's AssemblyInfo.cs and
+             this port's own code. See Directory.Build.props for why the expression must be explicit. -->
+        <PortLicenseExpression>Apache-2.0 AND MIT</PortLicenseExpression>
+    </PropertyGroup>
+    <ItemGroup>
+        <!-- OutputCacheAttribute is the only consumer. The package is a real, supported .NET one, and
+         unlike System.Configuration nothing in the framework ships an empty facade to collide with,
+         so there is no reason to port mono's copy. -->
+        <PackageReference Include="Net4x.NuGetUtility" Version="$(NuGetUtilityVersion)" PrivateAssets="All" />
+        <PackageReference Include="System.Runtime.Caching" Version="8.0.0" />
+    </ItemGroup>
+    <!-- Upstream sources, compiled in place. Regenerate with: Tools/gen-sources.ps1 -->
+    <Import Project="Sources.generated.props" />
+    <ItemGroup>
+        <Compile Include="Generated\**\*.cs" />
+        <Compile Include="Overrides\**\*.cs" />
+        <Compile Include="Port\**\*.cs" />
+    </ItemGroup>
+    <ItemGroup>
+        <!-- MvcResources.Designer.cs asks its ResourceManager for "System.Web.Mvc.Properties.MvcResources"
+         BY NAME, so the manifest name has to match exactly - every MVC error message comes through it.
+         Getting it wrong is quiet: the assembly builds and the host starts, and the first request that
+         formats any message dies with MissingManifestResourceException.
+
+         MVC 4 keeps this under Properties/ and names the manifest to match; MVC 3 kept it under
+         Mvc/Resources/. Both halves changed with the upgrade. -->
+        <EmbeddedResource Include="$(MvcUpstreamDir)Properties\MvcResources.resx" LogicalName="System.Web.Mvc.Properties.MvcResources.resources" />
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\AspNetCore.Web\AspNetCore.Web.csproj" />
+        <ProjectReference Include="..\AspNetCore.Web.WebPages\AspNetCore.Web.WebPages.csproj" />
+        <ProjectReference Include="..\AspNetCore.Web.WebPages.Razor\AspNetCore.Web.WebPages.Razor.csproj" />
+        <ProjectReference Include="..\AspNetCore.Web.Extensions\AspNetCore.Web.Extensions.csproj" />
+        <ProjectReference Include="..\AspNetCore.Web.Razor\AspNetCore.Web.Razor.csproj" />
+    </ItemGroup>
+    <!-- Removes the empty .NET System.Web.dll facade; see the file for why this is not optional. -->
+    <PropertyGroup>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+    </PropertyGroup>
+    <ItemGroup>
+        <Content Include="README.md" Link="README.md" Pack="true" PackagePath="\README.md" />
+        <!-- Travels with the package: an SPDX expression says WHICH licences apply, not to which
+             files. See Directory.Build.props for why the expression is set explicitly. -->
+        <Content Include="$(MSBuildThisFileDirectory)..\THIRD-PARTY-NOTICES.md" Link="THIRD-PARTY-NOTICES.md" Pack="true" PackagePath="\THIRD-PARTY-NOTICES.md" />
+    </ItemGroup>
+    <Import Project="..\Build\WebFormsPort.targets" />
+    <Import Project="$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.targets" Condition="Exists('$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.targets')" />
+</Project>

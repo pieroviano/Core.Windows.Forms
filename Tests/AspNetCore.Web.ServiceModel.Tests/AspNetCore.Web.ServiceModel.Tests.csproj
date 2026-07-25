@@ -1,0 +1,48 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Functional tests for .svc (WCF) hosting, against Samples/WcfSample.
+
+    Raw HTTP rather than a generated client: what has to be true is that a SOAP request sent to the
+    URL the .svc file sits at gets a SOAP response. A ServiceModel client proxy would hide exactly
+    that - it builds its own address from configuration and would still pass if the .svc convention
+    were doing nothing.
+
+    Its own project because the ported runtime hosts one application per process, and because
+    AddSvcEndpoints/UseSvcEndpoints run once at startup: the discovery cannot be re-done for a
+    second application later in the same process.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>WebFormsPort.ServiceModelTests</RootNamespace>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <EnableDefaultContentItems>false</EnableDefaultContentItems>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\AspNetCore.Web.Hosting.Kestrel\AspNetCore.Web.Hosting.Kestrel.csproj" />
+    <ProjectReference Include="..\..\AspNetCore.Web.ServiceModel\AspNetCore.Web.ServiceModel.csproj" />
+    <ProjectReference Include="..\..\Samples\WcfSample\WcfSample.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\AspNetCore.Web.FunctionalTests\Infrastructure\RepoPaths.cs"
+             Link="Infrastructure\RepoPaths.cs" />
+  </ItemGroup>
+
+  <Import Project="..\..\Build\WebFormsPort.targets" />
+
+</Project>

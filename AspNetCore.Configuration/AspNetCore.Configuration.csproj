@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+    <Import Project="$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.props" Condition="Exists('$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.props')" />
+    <PropertyGroup>
+        <PackageOutputPath>$(SolutionDir)Packages/</PackageOutputPath>
+        <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+        <Version>$(VersionPrefix).$(VersionSuffix)</Version>
+        <TargetFramework>net10.0</TargetFramework>
+        <AssemblyName>Core.Configuration</AssemblyName>
+        <RootNamespace>System.Configuration</RootNamespace>
+        <LangVersion>latest</LangVersion>
+        <Nullable>disable</Nullable>
+        <ImplicitUsings>disable</ImplicitUsings>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+        <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+        <NoWarn>$(NoWarn);612;618;436;1591;0108;0114;0067;0162;0169;0219;0414;0649;3021;SYSLIB0003;SYSLIB0011;SYSLIB0012;SYSLIB0021;SYSLIB0022;SYSLIB0023;CS8981</NoWarn>
+        <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+        <WarningLevel>0</WarningLevel>
+        <DebugType>portable</DebugType>
+        <MonoClassDir>$(MSBuildThisFileDirectory)..\mono\mcs\class\</MonoClassDir>
+        <DefineConstants>$(DefineConstants);CONFIGURATION_2_0;NET_1_1;NET_2_0;NET_3_5;NET_4_0;NET_4_5</DefineConstants>
+        <DefineConstants>$(DefineConstants);CONFIGURATION_DEP</DefineConstants>
+        <DefineConstants>$(DefineConstants);XML_DEP</DefineConstants>
+        <DefineConstants>$(DefineConstants);SYSTEM_WEB_PORT;MONO</DefineConstants>
+        <PackageId>AspNet$(AssemblyName)</PackageId>
+        <Description>System.Configuration for .NET 10, ported from Mono. Supplies the configuration semantics the ported System.Web is written against, which the shipping System.Configuration.ConfigurationManager cannot provide.</Description>
+    </PropertyGroup>
+    <ItemGroup>
+        <!-- CAS attributes on the upstream API surface; inert metadata at runtime. -->
+        <PackageReference Include="System.Security.Permissions" Version="8.0.0" />
+        <!-- DpapiProtectedConfigurationProvider. -->
+        <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="8.0.0" />
+        <!-- RsaProtectedConfigurationProvider (EncryptedXml/EncryptedData).
+         8.0.2, not 8.0.0: that version was never published on this line, so asking for it makes
+         every consuming project emit NU1603 and silently resolve upwards anyway. -->
+        <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.10" />
+    </ItemGroup>
+    <!-- Upstream sources, compiled in place. Regenerate with: tools/gen-sources.ps1 -->
+    <Import Project="Sources.generated.props" />
+    <ItemGroup>
+        <PackageReference Include="Net4x.NuGetUtility" Version="$(NuGetUtilityVersion)" PrivateAssets="All" />
+    </ItemGroup>
+    <ItemGroup>
+        <Compile Include="Generated\**\*.cs" />
+        <Compile Include="Port\**\*.cs" />
+        <Compile Include="Overrides\**\*.cs" />
+    </ItemGroup>
+    <!-- Removes the empty .NET System.Configuration.dll / System.Web.dll facades. -->
+    <PropertyGroup>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+    </PropertyGroup>
+    <ItemGroup>
+        <Content Include="README.md" Link="README.md" Pack="true" PackagePath="\README.md" />
+        <!-- Travels with the package: an SPDX expression says WHICH licences apply, not to which
+             files. See Directory.Build.props for why the expression is set explicitly. -->
+        <Content Include="$(MSBuildThisFileDirectory)..\THIRD-PARTY-NOTICES.md" Link="THIRD-PARTY-NOTICES.md" Pack="true" PackagePath="\THIRD-PARTY-NOTICES.md" />
+    </ItemGroup>
+    <Import Project="..\build\WebFormsPort.targets" />
+    <Import Project="$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.targets" Condition="Exists('$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.targets')" />
+</Project>

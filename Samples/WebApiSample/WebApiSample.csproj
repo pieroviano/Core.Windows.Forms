@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <!-- The package ships these in its build/ folder and NuGet imports them automatically for a
+       PackageReference. These samples use a ProjectReference instead, which carries no build/ assets,
+       so they are imported by hand to get the same result: the content globs, App_Code handling and
+       code-behind nesting that every ported project would otherwise repeat. -->
+  <Import Project="..\..\AspNetCore.Web.Hosting.Kestrel\build\Core.Web.Hosting.Kestrel.props" />
+
+  <!--
+    ASP.NET Web API hosted inside the ported System.Web. Controllers are compiled by the SDK; there is
+    no markup at all, so the only content is web.config and Global.asax - both picked up by the
+    package's default globs.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <!-- Sample apps are not packages. The Web SDK already defaults IsPackable=false, but
+         Directory.Build.props turns on GeneratePackageOnBuild for the packable port projects, and
+         inherited here that drives Pack over a non-packable app on every build - which warns. Turn it
+         back off: there is nothing to pack. (The test projects avoid this by using the plain SDK,
+         which does not set WarnOnPackingNonPackableProject.) -->
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\AspNetCore.Web.Hosting.Kestrel\AspNetCore.Web.Hosting.Kestrel.csproj" />
+    <ProjectReference Include="..\..\AspNetCore.Web.Http.WebHost\AspNetCore.Web.Http.WebHost.csproj" />
+    <!-- Do not remove: the controllers here derive from ApiController, which lives in Core.Web.Http. -->
+    <ProjectReference Include="..\..\AspNetCore.Web.Http\AspNetCore.Web.Http.csproj" />
+  </ItemGroup>
+
+  <Import Project="..\..\Build\WebFormsPort.targets" />
+
+  <Import Project="..\..\AspNetCore.Web.Hosting.Kestrel\build\Core.Web.Hosting.Kestrel.targets" />
+
+</Project>

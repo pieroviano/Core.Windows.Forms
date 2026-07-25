@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+    <Import Project="$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.props" Condition="Exists('$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.props')" />
+    <!--
+    System.Web.Optimization - script and style bundling.
+
+    Written fresh. This was never part of the ASP.NET Web Stack sources that Mono vendors: it shipped
+    as its own package (Microsoft.AspNet.Web.Optimization) and minified through WebGrease, which is
+    long dead and .NET Framework only. So there is nothing to port, only an API to reimplement.
+
+    The API is reproduced faithfully enough that an existing App_Start/BundleConfig.cs and existing
+    @Scripts.Render calls compile and run unchanged - that is the whole point of a port. What is NOT
+    reproduced is minification: bundles are concatenated, not minified. A substitute minifier that
+    quietly mangles one edge case in someone's JavaScript is far worse than a bundle that is merely
+    larger, and the CDN path is still there for anyone who wants pre-minified files.
+  -->
+    <PropertyGroup>
+        <PackageOutputPath>$(SolutionDir)Packages/</PackageOutputPath>
+        <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+        <!-- Required for the symbol package: without a portable PDB the SDK has nothing to
+         put in a .snupkg, and pack produces none without saying so. -->
+        <DebugType>portable</DebugType>
+        <Version>$(VersionPrefix).$(VersionSuffix)</Version>
+        <TargetFramework>net10.0</TargetFramework>
+        <AssemblyName>Core.Web.Optimization</AssemblyName>
+        <RootNamespace>System.Web.Optimization</RootNamespace>
+        <LangVersion>latest</LangVersion>
+        <Nullable>disable</Nullable>
+        <ImplicitUsings>disable</ImplicitUsings>
+        <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+        <!-- Same convention as every other package here: the ASSEMBLY is Core.Web.Optimization (the port
+         cannot use the real names - see Build/WebFormsPort.targets), while the PACKAGE keeps the
+         AspNetCore.* identity. AspNet + Core.Web.Optimization = AspNetCore.Web.Optimization. -->
+        <PackageId>AspNet$(AssemblyName)</PackageId>
+        <Description>System.Web.Optimization on .NET 10 - script and style bundling with content-hash URLs. Bundles are concatenated and cached, not minified.</Description>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+    </PropertyGroup>
+    <ItemGroup>
+        <Content Include="README.md" Link="README.md" Pack="true" PackagePath="\README.md" />
+        <!-- Travels with the package: an SPDX expression says WHICH licences apply, not to which
+             files. See Directory.Build.props for why the expression is set explicitly. -->
+        <Content Include="$(MSBuildThisFileDirectory)..\THIRD-PARTY-NOTICES.md" Link="THIRD-PARTY-NOTICES.md" Pack="true" PackagePath="\THIRD-PARTY-NOTICES.md" />
+    </ItemGroup>
+    <ItemGroup>
+        <!-- Every other packable project here references this, and the two that did not were the two
+             that shipped without a .snupkg: the package's props is what turns on IncludeSymbols and
+             SymbolPackageFormat=snupkg for a Debug pack. PrivateAssets="All" - it is build tooling,
+             not a dependency of the package. -->
+        <PackageReference Include="Net4x.NuGetUtility" Version="$(NuGetUtilityVersion)" PrivateAssets="All" />
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\AspNetCore.Web\AspNetCore.Web.csproj" />
+    </ItemGroup>
+    <Import Project="..\Build\WebFormsPort.targets" />
+    <Import Project="$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.targets" Condition="Exists('$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.targets')" />
+</Project>

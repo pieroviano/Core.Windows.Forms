@@ -1,0 +1,471 @@
+# Line-preserving mechanical patches applied to upstream sources at build time by
+# tools/gen-sources.ps1. Format (tab-separated, 3 fields):
+#
+#   <path-substring-filter>	<.NET regex>	<replacement>
+#
+# The path filter selects which upstream files a rule applies to (substring match, / separators).
+# Rules are applied in order. A rule that changes the line COUNT of a file is rejected by the
+# generator - patched files must keep upstream line numbers so stack traces and #line
+# directives stay meaningful.
+#
+# Patched copies land in Core.Web/obj/patched/ and are compiled instead of the upstream file.
+
+# --- P4a: ConfigurationElement/ConfigurationSection declare these members `protected internal`,
+#          and upstream overrides them as `protected internal` too - which is legal only inside
+#          the declaring assembly. C# (spec 15.6.4) requires an override of a `protected internal`
+#          member from *another* assembly to be declared plain `protected`. Mono got away with it
+#          because its System.Web and System.Configuration were built as friends; we reference the
+#          shipping System.Configuration.ConfigurationManager, so drop the `internal`.
+#          Verified: all ten members compile as plain `protected` against ConfigurationManager 8.0.0.
+#          The referencesource/System.Web/Configuration files already use plain `protected` and
+#          need no rule (checked: 0 of 113 declare `protected internal override`).
+# --- P1: DynamicBase / PrivateBinPath / ApplicationName are AppDomainSetup properties that carry
+#     no meaning on .NET Core (one AppDomain, no per-application setup). Redirect every read to
+#     Core.Web/Port/PortPaths.cs, which the Kestrel host initialises. ApplicationBase is NOT
+#     redirected - it works correctly and upstream reads it directly.
+class/System.Web/	AppDomain\.CurrentDomain\.SetupInformation\.DynamicBase	System.Web.Util.PortPaths.DynamicBase
+class/System.Web/	AppDomain\.CurrentDomain\.SetupInformation\.PrivateBinPath	System.Web.Util.PortPaths.PrivateBinPath
+class/System.Web/	AppDomain\.CurrentDomain\.SetupInformation\.ApplicationName	System.Web.Util.PortPaths.ApplicationName
+
+# --- P2: the remaining CodeDomProvider compile call site outside CachingCompiler (which is a
+#     full override). AssemblyBuilder still generates the source via CodeDom; only the compile
+#     step moves to Roslyn.
+System.Web.Compilation/AssemblyBuilder.cs	results = provider\.CompileAssemblyFromFile \(options, files\.ToArray \(\)\);	results = RoslynCompiler.CompileAssemblyFromFile (options, files.ToArray ());
+
+# --- P4: config bootstrap. Make the class partial so Port/WebConfigurationManager.Bootstrap.cs can
+#     supply a replacement Init(), rename the upstream one out of the way (it stays compiled and
+#     unreferenced for reference), drop the two Configuration.SaveStart/SaveEnd subscriptions that
+#     the shipping System.Configuration does not raise, source the config factory from
+#     ConfigSystemBootstrap, and null-guard the now-always-null oldConfig chain.
+
+# --- Membership/Roles types are forwarded to System.Web.ApplicationServices on .NET Framework.
+#     We fold that assembly's sources into this one, so the forwards now point at types defined
+#     here (CS0729). The 44 [assembly: WebResource] attributes in the same file are load-bearing
+#     for WebResource.axd, so patch the file rather than excluding it.
+System.Web/Assembly/AssemblyInfo.cs	(?m)^(\[assembly: TypeForwardedTo)	//$1
+
+# --- P4b: System.Configuration members Mono had and the shipping assembly does not. Each target
+#     is documented in Core.Web/Port/ConfigCompat.cs, including the two fidelity gaps.
+
+# --- Out-of-proc session state. Neither store can come from Mono: StateServer is implemented there
+#     over .NET Remoting (a CLR feature CoreCLR lacks), and the SQLServer handler targets a
+#     Mono-invented `Sessions` table through a Mono.Data.Sqlite factory this port excludes. Both are
+#     rewritten in Core.Web.SessionState - StateServer onto IDistributedCache, SQLServer onto the
+#     stock ASPState stored procedures.
+#
+#     Named as a STRING rather than typeof, deliberately: Core.Web must not reference
+#     Core.Web.SessionState (that would put Microsoft.Data.SqlClient in front of every application,
+#     session state or not). The provider model loads the type by name at runtime, which is what it
+#     is for. Mono's SessionSQLServerHandler stays compiled and reachable through mode="Custom".
+System.Web.SessionState_2.0/SessionStateModule.cs	settings = new ProviderSettings \(null, typeof \(SessionStateServerHandler\)\.AssemblyQualifiedName\);	settings = new ProviderSettings (null, "System.Web.SessionState.DistributedCacheSessionStateStore, Core.Web.SessionState");
+System.Web.SessionState_2.0/SessionStateModule.cs	settings = new ProviderSettings \(null, typeof \(SessionSQLServerHandler\)\.AssemblyQualifiedName\);	settings = new ProviderSettings (null, "System.Web.SessionState.SqlSessionStateStore, Core.Web.SessionState");
+
+# --- RuntimeEnvironment.SystemConfigurationFile throws PlatformNotSupportedException on .NET Core.
+#     Redirect to the embedded machine.config that Core.Web/Port/MachineConfig.cs extracts.
+class/System.Web/	System\.Runtime\.InteropServices\.RuntimeEnvironment\.SystemConfigurationFile	System.Web.Util.PortPaths.MachineConfigPath
+class/System.Web/	(?<![.\w])RuntimeEnvironment\.SystemConfigurationFile	System.Web.Util.PortPaths.MachineConfigPath
+
+# --- Windows performance counters. The "ASP.NET" counter category is registered by the .NET
+#     Framework installer and does not exist here, so the counters are read-only and the first
+#     write throws from HttpRuntime's static constructor. Retarget at an in-memory stand-in
+#     (PerformanceCounter is sealed, so the field types change too).
+System.Web/QueueManager.cs	PerformanceCounter requestsQueuedCounter;	System.Web.Util.PortPerformanceCounter requestsQueuedCounter;
+System.Web/QueueManager.cs	requestsQueuedCounter = new PerformanceCounter \(	requestsQueuedCounter = new System.Web.Util.PortPerformanceCounter (
+System.Web/HttpApplication.cs	internal static PerformanceCounter requests_total_counter = new PerformanceCounter \(	internal static System.Web.Util.PortPerformanceCounter requests_total_counter = new System.Web.Util.PortPerformanceCounter (
+
+# --- P7: Kestrel owns admission control and queueing. Upstream defers a request into its own
+#     internal queue when the thread pool looks busy (minFreeThreads/minLocalRequestFreeThreads),
+#     which under Kestrel means double-queueing - and worse, GetNextRequest then returns null, so
+#     ProcessRequest returns without writing a response and the client gets an empty 200. Always
+#     admit; the <httpRuntime> throttling attributes become inert, which is the intended v1 tradeoff.
+System.Web/QueueManager.cs	return \(threads > minFree\) \|\| \(local && threads > minLocalFree\);	return true; // Kestrel owns admission control; see PORT-System.Web-Kestrel-PLAN.md P7
+
+# --- Mono's System.Configuration declares System.Web a friend, which is what lets the whole ported
+#     System.Web tree override protected internal ConfigurationElement members with upstream's own
+#     accessibility. Retarget the friend at this port's assembly names (and drop the PublicKey -
+#     these assemblies are unsigned). Without this, ~170 config files fail with CS0507.
+System.Configuration/Assembly/AssemblyInfo.cs	\[assembly: InternalsVisibleTo \("System\.Web, PublicKey=[0-9a-f]+"\)\]	[assembly: InternalsVisibleTo ("Core.Web, PublicKey=002400000480000094000000060200000024000052534131000400000100010041c23647581173cd64456781bdeca5d2d95f82d27af80d3ba54c1e34900913dc1f79062d3acbfc1fba568eb7a835d3f734282936d2bd45ab2fc29aff390fe59822ec16377170fdcc957e30e85f76bd7ad63a2fbbce94653498e10e91a9b0fc570b7ccf8a5aca0c32630ba2fefea28e61c4438cf7231f37ba35f62bff56d0bbf0")]
+
+# --- Core.Configuration: the same two host-policy APIs, redirected at this assembly's own helper
+#     (Core.Configuration must not reference Core.Web - the dependency runs the other way).
+#       RuntimeEnvironment.SystemConfigurationFile -> throws PlatformNotSupportedException on .NET Core
+#       AppDomainSetup.ConfigurationFile           -> does not exist on .NET Core
+System.Configuration/	System\.Runtime\.InteropServices\.RuntimeEnvironment\.SystemConfigurationFile	System.Configuration.Internal.PortConfigPaths.MachineConfigPath
+System.Configuration/	AppDomain\.CurrentDomain\.SetupInformation\.ConfigurationFile	System.Configuration.Internal.PortConfigPaths.ExeConfigurationFile
+System.Configuration/	string configFile = currentInfo\.ConfigurationFile;	string configFile = System.Configuration.Internal.PortConfigPaths.ExeConfigurationFile;
+
+# --- Mirror of the accessibility problem the port hit in reverse. These files come from mono's
+#     System.dll, where ConfigurationElement lived in a *different* assembly, so they correctly say
+#     `protected override`. Here they are compiled INTO the same assembly as ConfigurationElement,
+#     and C# then requires the override to repeat the full `protected internal`.
+System/System.Configuration/	(?m)^([ \t]*)protected( override\b[^\r\n]*?\b(?:Properties|ElementProperty|Reset|ResetModified|IsModified|SerializeElement|SerializeToXmlElement|Unmerge|GetRuntimeObject|SetReadOnly|DeserializeSection|DeserializeElement|PostDeserialize|PreSerialize|InitializeDefault|OnDeserializeUnrecognizedAttribute|OnDeserializeUnrecognizedElement|OnRequiredPropertyNotFound|ListErrors)\b)	${1}protected internal${2}
+
+# --- P6: BinaryFormatter is disabled on .NET 8 and removed in .NET 9, so every call throws
+#     NotSupportedException. Port/StateSerializer.cs replaces it - see that file for why the two
+#     cases get different treatment.
+#
+#     (a) SingleRankArrayFormatter: primitive-element arrays, serialised natively and losslessly.
+#         Not an edge case - ClientScriptManager's event-validation state is a primitive array, so
+#         this fired on every page containing <form runat="server">.
+System.Web.UI/ObjectStateFormatter.cs	readonly BinaryFormatter _binaryFormatter = new BinaryFormatter \(\);	// BinaryFormatter removed by the port; see Port/StateSerializer.cs
+System.Web.UI/ObjectStateFormatter.cs	_binaryFormatter\.Serialize \(w\.BaseStream, o\);	System.Web.Util.StateSerializer.PrimitiveArray.Write (w, val);
+System.Web.UI/ObjectStateFormatter.cs	return _binaryFormatter\.Deserialize \(r\.BaseStream\);	return System.Web.Util.StateSerializer.PrimitiveArray.Read (r);
+#
+#     (b) The catch-all formatters for types with no specialised writer. No faithful substitute
+#         exists, so these throw a message naming the offending type instead of guessing at an
+#         encoding that would silently change what round-trips.
+System.Web.UI/ObjectStateFormatter.cs	new BinaryFormatter \(\)\.Serialize \(ms, o\);	System.Web.Util.StateSerializer.SerializeUnsupported (ms, o);
+System.Web.UI/ObjectStateFormatter.cs	return new BinaryFormatter \(\)\.Deserialize \(new MemoryStream \(buf\)\);	return System.Web.Util.StateSerializer.DeserializeUnsupported (new MemoryStream (buf));
+System.Web.Caching/OutputCache.cs	object o = new BinaryFormatter \(\)\.Deserialize \(stream\);	object o = System.Web.Util.StateSerializer.DeserializeUnsupported (stream);
+System.Web.Caching/OutputCache.cs	new BinaryFormatter \(\)\.Serialize \(stream, data\);	System.Web.Util.StateSerializer.SerializeUnsupported (stream, data);
+#         The remaining call sites, as single-line rules: the declaration line is neutralised and
+#         the use is redirected. (A replacement cannot contain a newline - .NET does not expand 
+
+#         in a replacement string - so every rule must rewrite exactly one line.)
+System.Web.Util/AltSerialization.cs	BinaryFormatter bf = new BinaryFormatter \(\);	// BinaryFormatter removed by the port; see Port/StateSerializer.cs
+System.Web.Util/AltSerialization.cs	bf\.Serialize \(w\.BaseStream, value\);	System.Web.Util.StateSerializer.SerializeUnsupported (w.BaseStream, value);
+System.Web.Util/AltSerialization.cs	return bf\.Deserialize \(r\.BaseStream\);	return System.Web.Util.StateSerializer.DeserializeUnsupported (r.BaseStream);
+System.Web.Util/SerializationHelper.cs	BinaryFormatter binFormatter = new BinaryFormatter\(\);	// BinaryFormatter removed by the port; see Port/StateSerializer.cs
+System.Web.Util/SerializationHelper.cs	binFormatter\.Serialize\(mStream, value\);	System.Web.Util.StateSerializer.SerializeUnsupported(mStream, value);
+System.Web.Util/SerializationHelper.cs	return binFormatter\.Deserialize\(mStream\);	return System.Web.Util.StateSerializer.DeserializeUnsupported(mStream);
+
+# --- Upstream defect, not a port issue: WebConfigurationHost.DecryptSection calls
+#     protectedSection.EncryptSection, so an encrypted configuration section never round-trips -
+#     reading one returns doubly-encrypted garbage. ProtectedConfigurationSection.DecryptSection
+#     exists (System.Configuration/ProtectedConfigurationSection.cs:78) and is reachable via the
+#     friend declaration; upstream simply named the wrong method. The rule is anchored on the
+#     encryptedXml parameter so it cannot touch the genuine EncryptSection below it.
+System.Web.Configuration_2.0/WebConfigurationHost.cs	return protectedSection\.EncryptSection \(encryptedXml, protectionProvider\);	return protectedSection.DecryptSection (encryptedXml, protectionProvider);
+
+# --- Mono's System.Web declares System.Web.Extensions a friend, which is how the AJAX/data controls
+#     reach internals like WebCategoryAttribute, INonBindingContainer and MonoTODOAttribute. Retarget
+#     it at this port's assembly name (unsigned, so no PublicKey). Without this, ~190 errors:
+#     CS0122 on every internal use and CS0507 on overrides of protected internal members.
+# --- Microsoft.Web.Infrastructure is a friend of System.Web upstream too (AssemblyInfo.cs:80) -
+#     LazyWebROCollection derives from System.Web's internal WebROCollection. Same retarget as
+#     Extensions above: this port's assembly name, and this port's key.
+System.Web/Assembly/AssemblyInfo.cs	\[assembly: InternalsVisibleTo \("Microsoft\.Web\.Infrastructure, PublicKey=[0-9a-f]+"\)\]	[assembly: InternalsVisibleTo ("Core.Web.Infrastructure, PublicKey=002400000480000094000000060200000024000052534131000400000100010041c23647581173cd64456781bdeca5d2d95f82d27af80d3ba54c1e34900913dc1f79062d3acbfc1fba568eb7a835d3f734282936d2bd45ab2fc29aff390fe59822ec16377170fdcc957e30e85f76bd7ad63a2fbbce94653498e10e91a9b0fc570b7ccf8a5aca0c32630ba2fefea28e61c4438cf7231f37ba35f62bff56d0bbf0")]
+System.Web/Assembly/AssemblyInfo.cs	\[assembly: InternalsVisibleTo \("System\.Web\.Extensions, PublicKey=[0-9a-f]+"\)\]	[assembly: InternalsVisibleTo ("Core.Web.Extensions, PublicKey=002400000480000094000000060200000024000052534131000400000100010041c23647581173cd64456781bdeca5d2d95f82d27af80d3ba54c1e34900913dc1f79062d3acbfc1fba568eb7a835d3f734282936d2bd45ab2fc29aff390fe59822ec16377170fdcc957e30e85f76bd7ad63a2fbbce94653498e10e91a9b0fc570b7ccf8a5aca0c32630ba2fefea28e61c4438cf7231f37ba35f62bff56d0bbf0")]
+
+# --- Core.Web.Extensions -> System.Web.Script.Services. Page methods and [ScriptService] .asmx
+#     services are SHIPPED: they are [WebMethod] endpoints, and System.Web.Services is now ported as
+#     Core.Web.Services, so ScriptManager, ScriptModule, RestHandler, ClientProxyHandler and the
+#     authentication/profile services all compile against the real thing. No redirects remain.
+#
+#     What is still unsupported is the WCF half of LogicalTypeInfo.cs - WcfLogicalTypeInfo needs
+#     System.ServiceModel.Description to describe a [ServiceContract], and nothing here hosts a .svc
+#     endpoint. Retargeting that file's two usings at the port's shim keeps all 676 lines compiled in
+#     place rather than forking the file into Overrides/ to delete its second half, which would be a
+#     large permanent divergence to re-merge. The dispatch is redirected too, so a real WCF contract
+#     fails with a clear message instead of being mis-described as an .asmx service.
+#     See Core.Web.Extensions/Port/WcfDescriptionShim.cs.
+System.Web.Extensions/System.Web.Script.Services/LogicalTypeInfo.cs	using System\.ServiceModel;	using System.Web.Script.Services.Port;
+System.Web.Extensions/System.Web.Script.Services/LogicalTypeInfo.cs	using System\.ServiceModel\.Description;	// port: System.ServiceModel.Description -> Port/WcfDescriptionShim.cs
+System.Web.Extensions/System.Web.Script.Services/LogicalTypeInfo.cs	if \(t\.GetCustomAttributes \(typeof \(ServiceContractAttribute\), false\)\.Length > 0\)	if (System.Web.Script.Services.Port.WcfNotSupported.IsServiceContract (t))
+
+# --- P7: make HttpRuntime partial so Core.Web/Port/HttpRuntime.Async.cs can add an async request
+#     entry point beside Process(). It needs the private statics (AppIsOffline, FinishWithException,
+#     end_of_send_cb, firstRun, initialException, SetupOfflineWatch), which only another part of the
+#     same class can reach.
+System.Web/HttpRuntime.cs	public sealed class HttpRuntime	public sealed partial class HttpRuntime
+
+# --- Response.End () without thread aborts. Thread.Abort and Thread.ResetAbort both throw
+#     PlatformNotSupportedException on .NET Core, which broke Response.End (), Server.Transfer and
+#     the ordinary one-argument Response.Redirect (url) - all of which end the response.
+#     Core.Web/Port/RequestEndException.cs carries the same ExceptionState the abort did, so the
+#     pipeline's existing catch bodies work unchanged after the type swap.
+System.Web/HttpResponse.cs	Thread\.CurrentThread\.Abort \(FlagEnd\.Value\);	throw new System.Web.Util.RequestEndException (FlagEnd.Value);
+System.Web/HttpApplication.cs	catch \(ThreadAbortException taex\)	catch (System.Web.Util.RequestEndException taex)
+System.Web.UI/Page.cs	catch \(ThreadAbortException taex\)	catch (System.Web.Util.RequestEndException taex)
+System.Web/HttpApplication.cs	ThreadAbortException inner = e\.InnerException as ThreadAbortException;	System.Web.Util.RequestEndException inner = e.InnerException as System.Web.Util.RequestEndException;
+System.Web/HttpApplication.cs	Thread\.ResetAbort \(\);	System.Web.Util.RequestEndException.ResetAbort ();
+System.Web.UI/Page.cs	Thread\.ResetAbort \(\);	System.Web.Util.RequestEndException.ResetAbort ();
+
+# --- Core.Web.Services: [ConfigurationPermission] is ambiguous here - the type is declared by BOTH
+#     Core.Configuration (Mono's) and the System.Security.Permissions package, and both are on this
+#     project's reference set. It is an inert CAS assert on .NET Core, so it is dropped rather than
+#     disambiguated with an extern alias.
+System.Web.Services/	(?m)^([ \t]*)(\[ConfigurationPermission\(SecurityAction\.Assert)	$1// $2
+
+# --- Core.Web.Services: Assembly.Evidence is gone on .NET Core (CAS). It was only ever passed to
+#     XmlSerializer generation to sandbox the generated serializer - meaningless without CAS - so it
+#     becomes null. These are on the SERVING path, so they are fixed rather than excluded.
+Protocols/ServerType.cs	return Type\.Assembly\.Evidence;	return null; // Assembly.Evidence: CAS, removed on .NET Core
+Protocols/SoapServerMethod.cs	return type\.Assembly\.Evidence;	return null; // Assembly.Evidence: CAS, removed on .NET Core
+
+# --- The WSDL *importer* types (client proxy generation) are excluded because .NET Core has no XML
+#     serialization codegen. WebServicesSection registers them as configuration defaults, so those
+#     registrations go too - reading the section must not fail over a type that cannot exist.
+Configuration/WebServicesSection.cs	protocolImporterList\.Add\(typeof\(SoapProtocolImporter\)\);	/* SoapProtocolImporter: WSDL import needs serialization codegen, absent on .NET Core */
+Configuration/WebServicesSection.cs	protocolImporterList\.Add\(typeof\(Soap12ProtocolImporter\)\);	/* Soap12ProtocolImporter: WSDL import needs serialization codegen, absent on .NET Core */
+Configuration/WebServicesSection.cs	retval\[0\] = typeof\(SoapHttpTransportImporter\);	retval = new Type [SoapTransportImporterTypes.Count]; // SoapHttpTransportImporter: WSDL import, absent
+Configuration/WebServicesSection.cs	Type\[\] mimeImporterTypes = new Type\[\] \{ typeof\(MimeXmlImporter\), typeof\(MimeFormImporter\), typeof\(MimeTextImporter\) \};	Type[] mimeImporterTypes = new Type[] { typeof(MimeFormImporter), typeof(MimeTextImporter) };
+Configuration/WebServicesSection.cs	protocolImporterList\.Add\(typeof\(HttpGetProtocolImporter\)\);	/* HttpGetProtocolImporter: WSDL import, absent on .NET Core */
+Configuration/WebServicesSection.cs	protocolImporterList\.Add\(typeof\(HttpPostProtocolImporter\)\);	/* HttpPostProtocolImporter: WSDL import, absent on .NET Core */
+Configuration/WebServicesSection.cs	importers\.Add\(typeof\(HttpPostProtocolImporter\)\);	/* HttpPostProtocolImporter: WSDL import, absent on .NET Core */
+Configuration/WebServicesSection.cs	importers\.Add\(typeof\(HttpGetProtocolImporter\)\);	/* HttpGetProtocolImporter: WSDL import, absent on .NET Core */
+Configuration/WebServicesSection.cs	Type\[\] mimeImporterTypes = new Type\[\] \{ typeof\(MimeFormImporter\), typeof\(MimeTextImporter\) \};	Type[] mimeImporterTypes = new Type[0]; // MIME importers: WSDL import, absent on .NET Core
+
+# --- XmlSerializer.FromMappings (mappings, Evidence) does not exist on .NET Core; the second
+#     parameter is now a Type used for the generated serializer's context. Evidence was CAS
+#     sandboxing, so it simply goes away - these are on the .asmx SERVING path.
+Protocols/SoapServerMethod.cs	serializers = XmlSerializer\.FromMappings\(xmlMappings, serverEvidence\);	serializers = XmlSerializer.FromMappings(xmlMappings);
+Protocols/SoapServerProtocol.cs	serializers = XmlSerializer\.FromMappings\(\(xmlMappings\), this\.Evidence\);	serializers = XmlSerializer.FromMappings((xmlMappings));
+
+# --- WebServicesInteroperability is KEPT (it declares BasicProfileViolation* which ProtocolReflector
+#     and the .asmx help page both need, and the WS-I check during WSDL generation is real). Only its
+#     CheckConformance overload taking a WebReference becomes internal, because WebReference is now an
+#     internal stand-in - a public method cannot expose an internal parameter type.
+
+# --- Two more Evidence sites on the serving path.
+Protocols/XmlReturnReader.cs	serializers = XmlSerializer\.FromMappings\(xmlMappings, evidence\);	serializers = XmlSerializer.FromMappings(xmlMappings);
+Protocols/XmlReturnReader.cs	return type\.Assembly\.Evidence;	return null; // Assembly.Evidence: CAS, removed on .NET Core
+
+# --- SystemWebSectionGroup.WebServices exposes a WebServicesSection, which now lives in
+#     Core.Web.Services. Core.Web cannot reference it (Core.Web.Services references Core.Web - the
+#     dependency runs that way), and a stub in Core.Web would collide with the real type as CS0433
+#     the moment both assemblies are on a page's reference set. The property is weakened to object;
+#     the section itself is reached the normal way, through WebServicesSection.Current.
+System.Web.Configuration_2.0/SystemWebSectionGroup.cs	public WebServicesSection WebServices \{	public object WebServices { // WebServicesSection lives in Core.Web.Services; see port notes
+System.Web.Configuration_2.0/SystemWebSectionGroup.cs	get \{ return \(WebServicesSection\)Sections \["webServices"\]; \}	get { return Sections ["webServices"]; }
+System.Web.Configuration_2.0/SystemWebSectionGroup.cs	(?m)^using System\.Web\.Services\.Configuration;	// using System.Web.Services.Configuration; // moved to Core.Web.Services
+
+# --- Core.Web.WebPages: System.Data.Linq (LINQ to SQL) does not exist on .NET Core, and is reached
+#     from exactly one place - GetHiddenFieldValue base64s a Linq.Binary before rendering it into a
+#     hidden field. Nothing can hand it a Binary here, so the branch is dead; it only has to compile.
+#
+#     The using line is spent on System.Linq instead, which is what makes the replacement below
+#     compile: binaryValue.ToArray () then binds to Enumerable.ToArray<byte> rather than
+#     Binary.ToArray, and the surrounding null check makes it unreachable. Both rules rewrite exactly
+#     one line, so upstream line numbers still line up.
+System.Web.WebPages/Html/HtmlHelper.Input.cs	using System\.Data\.Linq;	using System.Linq; // port: System.Data.Linq (LINQ to SQL) is not available on .NET Core
+System.Web.WebPages/Html/HtmlHelper.Input.cs	Binary binaryValue = value as Binary;	byte [] binaryValue = null; // port: a System.Data.Linq.Binary cannot reach this method
+
+# --- Core.Web.WebPages: CryptoUtil picks a SHA256 implementation by walking a Windows-specific
+#     ladder - CNG first, then CAPI - to satisfy FIPS policy. Neither SHA256Cng nor
+#     SHA256CryptoServiceProvider exists outside .NET Framework; on .NET Core the platform makes that
+#     choice itself and SHA256.Create () returns whatever is appropriate, FIPS included. The
+#     surrounding try/catch becomes redundant rather than wrong, so it is left alone and only the
+#     three construction sites are rewritten, one line each.
+System.Web.WebPages/Helpers/CryptoUtil.cs	using \(SHA256Cng sha256 = new SHA256Cng\(\)\)	using (SHA256 sha256 = SHA256.Create ()) // port: SHA256Cng is Windows-only
+System.Web.WebPages/Helpers/CryptoUtil.cs	return \(\) => new SHA256Cng\(\);	return () => SHA256.Create (); // port: SHA256Cng is Windows-only
+System.Web.WebPages/Helpers/CryptoUtil.cs	return \(\) => new SHA256CryptoServiceProvider\(\);	return () => SHA256.Create (); // port: CAPI provider is Windows-only
+
+# --- Core.Web.Mvc: the remaining System.Data.Linq.Binary references. Each rule rewrites exactly one
+#     line, so upstream line numbers still line up.
+#
+#     ModelBinders.cs and DefaultEditorTemplates.cs already import System.Linq, so their using line is
+#     simply neutralised. InputExtensions.cs imports only System.Linq.Expressions, so its line is
+#     spent on System.Linq - which is what makes binaryValue.ToArray () bind to
+#     Enumerable.ToArray<byte> below, with the null check leaving it unreachable.
+#
+#     Dropping the dictionary entry leaves a trailing comma in the collection initialiser, which is
+#     legal C#.
+aspnetwebstack/src/System.Web.Mvc/ModelBinders.cs	using System\.Data\.Linq;	// port: System.Data.Linq (LINQ to SQL) is not available on .NET Core
+aspnetwebstack/src/System.Web.Mvc/ModelBinders.cs	\{ typeof\(Binary\), new LinqBinaryModelBinder\(\) \}	// port: Binary cannot occur here; LinqBinaryModelBinder is excluded
+aspnetwebstack/src/System.Web.Mvc/Html/DefaultEditorTemplates.cs	using System\.Data\.Linq;	// port: System.Data.Linq (LINQ to SQL) is not available on .NET Core
+aspnetwebstack/src/System.Web.Mvc/Html/DefaultEditorTemplates.cs	Binary modelAsBinary = model as Binary;	byte [] modelAsBinary = null; // port: a Linq.Binary cannot reach this template
+aspnetwebstack/src/System.Web.Mvc/Html/InputExtensions.cs	using System\.Data\.Linq;	using System.Linq; // port: System.Data.Linq (LINQ to SQL) is not available on .NET Core
+aspnetwebstack/src/System.Web.Mvc/Html/InputExtensions.cs	Binary binaryValue = value as Binary;	byte [] binaryValue = null; // port: a Linq.Binary cannot reach this helper
+
+# --- Routing: honour a handler installed by RemapHandler.
+#
+#     UrlRoutingModule matches the route during PostResolveRequestCache and calls
+#     HttpContext.RemapHandler, which sets context.Handler. Upstream then reaches MapRequestHandler
+#     and unconditionally overwrites it by resolving the REQUEST PATH through <httpHandlers> - so the
+#     handler routing just chose is discarded, and a routed URL like /Home/Plain 404s because no such
+#     file exists. .NET Framework uses the remapped handler when one is present.
+#
+#     Without this, nothing route-based works at all: MVC, Web API, WebPages' extensionless URLs, and
+#     any application calling RouteTable.Routes.MapPageRoute.
+System.Web/HttpApplication.cs	handler = GetHandler \(context, context\.Request\.CurrentExecutionFilePath\);	handler = context.Handler ?? GetHandler (context, context.Request.CurrentExecutionFilePath); // port: a module may have remapped it
+
+# --- BuildManager.GetType: match an assembly reference on its SIMPLE NAME as well as its full one.
+#
+#     Upstream compares the requested name against asm.GetName ().ToString () - the full display name,
+#     Version, Culture and PublicKeyToken included - and its own comment calls that "So dumb...". A
+#     configuration reference of the ordinary form type="Some.Type, Some.Assembly" therefore never
+#     matches anything, because the left side has no version and the right side always does.
+#
+#     It matters more here than upstream: this port binds by simple name on purpose - gen-config.ps1
+#     strips strong-name qualification from every generated reference for exactly that reason - and
+#     signing the assemblies added a PublicKeyToken to the right-hand side as well. The first thing it
+#     broke was <system.web.webPages.razor><host factoryType="..., Core.Web.Mvc" />, which made every
+#     Razor view fail to compile and surface as "the view was not found", because
+#     BuildManager.GetObjectFactory swallows the compile exception.
+System.Web.Compilation/BuildManager.cs	if \(String\.Compare \(wantedAsmName, asm\.GetName \(\)\.ToString \(\), StringComparison\.Ordinal\) == 0\) \{	if (String.Compare (wantedAsmName, asm.GetName ().ToString (), StringComparison.Ordinal) == 0 || String.Compare (new AssemblyName (wantedAsmName).Name, asm.GetName ().Name, StringComparison.OrdinalIgnoreCase) == 0) {
+
+# --- WebResource.axd / ScriptResource.axd with no (or an empty) 'd' parameter.
+#
+#     DecryptAssemblyResource splits the value immediately, so a missing parameter is a
+#     NullReferenceException and the request comes back 500. The very next line already handles a
+#     malformed value by returning null, and the caller turns that into the 404 this deserves - the
+#     null case simply was not considered. Guarding it lets an unparseable request take that path.
+#
+#     The file is compiled into both Core.Web and Core.Web.Extensions, so this fixes WebResource.axd
+#     and ScriptResource.axd together.
+System.Web.Handlers/AssemblyResourceLoader.cs	string\[\] parts = val\.Split \('_'\);	string [] parts = String.IsNullOrEmpty (val) ? new string [0] : val.Split ('_'); // port: no 'd' is a 404, not a 500
+
+# --- WebConfigurationManager.GetSection (name, path): resolve the hierarchy for the path's DIRECTORY.
+#
+#     OpenWebConfiguration only recognises a directory, and only one written with a trailing slash, so
+#     "/Secure/" found the sub-directory's web.config while "/Secure", "~/Secure" and
+#     "/Secure/Secret.aspx" all silently fell back to the application root's. Asking for a section
+#     "for this page" - the natural call, and the one UrlAuthorizationModule's shape implies - gave
+#     the wrong answer instead of failing.
+#
+#     Only the argument to OpenWebConfiguration is normalised. The original path is still used for the
+#     <location> lookups below, which is the division upstream intended.
+#     See Core.Web/Port/ConfigPathNormalizer.cs.
+System.Web.Configuration_2.0/WebConfigurationManager.cs	_Configuration c = OpenWebConfiguration \(path, null, null, null, null, null, false\);	_Configuration c = OpenWebConfiguration (System.Web.Util.ConfigPathNormalizer.ToConfigDirectory (path), null, null, null, null, null, false);
+
+# --- WebConfigurationManager.GetSection: a PATH-SCOPED query must not answer from the path-less cache.
+#
+#     After the two path-specific cache keys miss, upstream falls back to the bare key - the entry
+#     written by GetSection (name) with no path at all. So a section asked for at one path can be
+#     answered with another path's cached value, and which answer you get depends on the order the
+#     process happened to ask. Only consult that entry when no path was supplied.
+System.Web.Configuration_2.0/WebConfigurationManager.cs	if \(sectionCache\.TryGetValue \(baseCacheKey, out o\)\)	if (!pathPresent && sectionCache.TryGetValue (baseCacheKey, out o)) // port: do not answer a path query from the path-less entry
+
+# --- ...and normalise the path for the REST of the method too, not just OpenWebConfiguration.
+#
+#     Everything downstream - the cache keys, and the relPath handed to LookUpLocation - was still
+#     built from the caller's original spelling. So "/Secure" and "/Secure/" opened the same
+#     configuration but then took different paths through LookUpLocation, and could disagree about
+#     the same directory depending on what the process had already been asked. Normalising once, here,
+#     makes every spelling of a directory behave identically and removes the order-dependence.
+#
+#     Consequence: a <location path="Some/File.aspx"> is no longer matched by a path-scoped
+#     GetSection, because the path is reduced to its directory before the lookup. Location sections
+#     still apply normally during a request, which is how they are almost always used.
+System.Web.Configuration_2.0/WebConfigurationManager.cs	bool pathPresent = !String\.IsNullOrEmpty \(path\);	path = System.Web.Util.ConfigPathNormalizer.ToConfigDirectory (path); bool pathPresent = !String.IsNullOrEmpty (path); // port: one spelling per directory
+
+# --- Core.Web.Http: System.Data.Linq.Binary model binding.
+#
+#     LINQ to SQL does not exist on .NET Core, so no request can carry a Binary. The file cannot just
+#     be excluded the way MVC's LinqBinaryModelBinder was - the SAME file also provides the byte[]
+#     binder, which is needed - so the three Binary references are patched out instead.
+#
+#     Removing the provider entry leaves a trailing comma in the array initialiser, which is legal C#,
+#     and the now-unused private binder is turned into a byte[] one so it still compiles.
+System.Web.Http/ModelBinding/Binders/BinaryDataModelBinderProvider.cs	using System\.Data\.Linq;	// port: System.Data.Linq (LINQ to SQL) is not available on .NET Core
+System.Web.Http/ModelBinding/Binders/BinaryDataModelBinderProvider.cs	new SimpleModelBinderProvider\(typeof\(Binary\), new LinqBinaryExtensibleModelBinder\(\)\)	// port: a Linq.Binary can never be bound here
+System.Web.Http/ModelBinding/Binders/BinaryDataModelBinderProvider.cs	return new Binary\(originalModel\);	return originalModel; // port: was new Binary (originalModel)
+
+# --- MVC 4 (Core.Web.Mvc). Three families of edit, all consequences of the port renaming assemblies
+#     and of Mono's System.Web being a 4.5 one where upstream MVC 4 targeted 4.0.
+
+# P-MVC1: WebPages grants its internals to "System.Web.Mvc", and this port's MVC assembly is called
+#     Core.Web.Mvc, so the grant misses and DisplayModeProvider.GetDisplayMode/SetDisplayMode -
+#     which ControllerContext and RazorView both call - become inaccessible. Same treatment as the
+#     other InternalsVisibleTo rules above: keep the grant, retarget the name and the key.
+aspnetwebstack/src/System.Web.WebPages/Properties/AssemblyInfo.cs	\[assembly: InternalsVisibleTo\("System\.Web\.Mvc, PublicKey=[0-9a-f]+"\)\]	[assembly: InternalsVisibleTo ("Core.Web.Mvc, PublicKey=002400000480000094000000060200000024000052534131000400000100010041c23647581173cd64456781bdeca5d2d95f82d27af80d3ba54c1e34900913dc1f79062d3acbfc1fba568eb7a835d3f734282936d2bd45ab2fc29aff390fe59822ec16377170fdcc957e30e85f76bd7ad63a2fbbce94653498e10e91a9b0fc570b7ccf8a5aca0c32630ba2fefea28e61c4438cf7231f37ba35f62bff56d0bbf0")]
+
+# P-MVC2: UnvalidatedRequestValues is ambiguous here in a way it was not upstream. MVC 4 targeted
+#     .NET 4.0 and meant System.Web.Helpers.UnvalidatedRequestValues (from Web Pages); Mono's
+#     System.Web is a 4.5 one and also defines System.Web.UnvalidatedRequestValues. C# looks in the
+#     enclosing namespace (System.Web) BEFORE consulting a using directive, so the wrong type wins
+#     and the using System.Web.Helpers is silently ignored. Fully qualify it.
+#
+#     Fixing the wrapper alone fixes FormValueProvider, QueryStringValueProvider and both factories:
+#     their errors are all downstream of this constructor failing to bind.
+aspnetwebstack/src/System.Web.Mvc/UnvalidatedRequestValuesWrapper.cs	private readonly UnvalidatedRequestValues _unvalidatedValues;	private readonly System.Web.Helpers.UnvalidatedRequestValues _unvalidatedValues;
+aspnetwebstack/src/System.Web.Mvc/UnvalidatedRequestValuesWrapper.cs	public UnvalidatedRequestValuesWrapper\(UnvalidatedRequestValues unvalidatedValues\)	public UnvalidatedRequestValuesWrapper (System.Web.Helpers.UnvalidatedRequestValues unvalidatedValues)
+
+# P-MVC3: EntityState lives in System.Data.Entity, which does not exist on .NET Core. It is used for
+#     exactly one thing - hiding EF's change-tracking enum from generated display templates - so a
+#     name comparison keeps that behaviour without the reference. Written to match both EF5's
+#     System.Data.EntityState and EF6's System.Data.Entity.EntityState, since either could be the
+#     model type of an application still carrying EF entities. The filter deliberately matches
+#     both Default*Templates.cs files - the same line appears in each.
+aspnetwebstack/src/System.Web.Mvc/Html/Default	&& metadata\.ModelType != typeof\(EntityState\)	&& metadata.ModelType.FullName != "System.Data.EntityState" && metadata.ModelType.FullName != "System.Data.Entity.EntityState"
+
+# --- @await in Razor views. Two edits; the reasoning lives in
+#     AspNetCore.Web.WebPages.Razor/Port/AsyncViewSupport.cs.
+
+# P-ASYNC1: Razor v2's implicit-expression parser accepts ONE identifier and then only method calls
+#     and indexers, so "@await Foo ()" parsed as the expression "await" followed by the literal text
+#     " Foo ()" - no error, just wrong output. Razor 3 fixed this upstream by special-casing the
+#     keyword; the same fix, inline. The lookbehind pins it to ImplicitExpression's loop, because
+#     AcceptAndMoveNext () appears all over this file.
+aspnetwebstack/src/System.Web.Razor/Parser/CSharpCodeParser.cs	(?<=if \(AtIdentifier\(allowKeywords: true\)\)\r?\n\s+\{\r?\n\s+)AcceptAndMoveNext\(\);	bool __isAwait = CurrentSymbol != null && String.Equals (CurrentSymbol.Content, "await", StringComparison.Ordinal); AcceptAndMoveNext (); if (__isAwait) { while (At (CSharpSymbolType.WhiteSpace)) { AcceptAndMoveNext (); } if (AtIdentifier (allowKeywords: true)) { AcceptAndMoveNext (); } }
+
+# P-ASYNC2: and the generated method has to be able to hold an await. AsyncViewSupport renames
+#     Execute () to an async __ExecuteAsync () and adds a synchronous Execute () that runs it - but
+#     ONLY for views that actually contain an await, so nothing else grows a state machine.
+#     MvcWebPageRazorHost chains to this base, so patching here covers MVC views too.
+aspnetwebstack/src/System.Web.WebPages.Razor/WebPageRazorHost.cs	base\.PostProcessGeneratedCode\(context\);	base.PostProcessGeneratedCode (context); System.Web.WebPages.Razor.AsyncViewSupport.Apply (context);
+
+# --- DynamicDataRouteHandler.cs WAS patched here, for a single unused "using
+#     System.Data.Linq.Mapping;". It is now an OVERRIDE instead - AspNetCore.Web.DynamicData/Overrides/
+#     System.Web.DynamicData__DynamicDataRouteHandler.cs - because a second change was needed that no
+#     line-preserving regex could express: upstream builds the per-request RouteContext and never
+#     publishes it, so GetRequestMetaTable returned null and every scaffolded page threw. The override
+#     explains it at length. Do not re-add a patch rule for this file: an override shadows the upstream
+#     source before patch rules are consulted, so the rule would match nothing and fail the build.
+
+# --- MetaModel.RegisterContext's default provider was DLinqDataModelProvider, i.e. LINQ to SQL. That
+#     provider is excluded (it cannot exist on .NET), so the default becomes the IQueryable one -
+#     see AspNetCore.Web.DynamicData/Port/QueryableDataModelProvider.cs. Same call, same line count.
+System.Web.DynamicData/MetaModel.cs	RegisterContextCore \(new DLinqDataModelProvider \(contextFactory\), configuration\);	RegisterContextCore (new System.Web.DynamicData.ModelProviders.QueryableDataModelProvider (contextFactory), configuration);
+
+# --- StateManagedCollection saved its state as Triplet (List<int>, List<object>, List<object>), and
+#     the port's ObjectStateFormatter has no native encoding for List<T> - only ArrayList. Upstream did
+#     not care, because anything unrecognised fell through to BinaryFormatter; this port refuses
+#     instead, by design. So EVERY StateManagedCollection - GridView.Columns, DetailsView.Fields,
+#     ListView, ParameterCollection, TreeNodeCollection, MenuItemCollection - threw
+#     NotSupportedException at SaveViewState the moment one of its items had dirty view state.
+#
+#     Declared-in-markup collections happened to escape it: their items save null state, SaveViewState
+#     returns null early, and no List is ever written. Set one property on a column from code and the
+#     page dies. That is why it survived a suite of GridView tests and was found by the first
+#     scaffolded page, which builds its columns at Page_Init.
+#
+#     ArrayList is the fix, not a new formatter: it is what the collection would have used in the
+#     framework this code was written against, the port already encodes it natively, and every element
+#     stored here is an int, a Type or an opaque state object - nothing that needed the type parameter.
+#     Line-preserving throughout, so the upstream line numbers in a view-state stack trace still hold.
+System.Web.UI/StateManagedCollection.cs	List <int> indices = state\.First as List <int>;	System.Collections.ArrayList indices = state.First as System.Collections.ArrayList;
+System.Web.UI/StateManagedCollection.cs	List <object> states = state\.Second as List <object>;	System.Collections.ArrayList states = state.Second as System.Collections.ArrayList;
+System.Web.UI/StateManagedCollection.cs	List <object> types = state\.Third as List <object>;	System.Collections.ArrayList types = state.Third as System.Collections.ArrayList;
+System.Web.UI/StateManagedCollection.cs	idx = indices \[i\];	idx = (int) indices [i];
+System.Web.UI/StateManagedCollection.cs	List <int> indices = null;	System.Collections.ArrayList indices = null;
+System.Web.UI/StateManagedCollection.cs	List <object> states = null;	System.Collections.ArrayList states = null;
+System.Web.UI/StateManagedCollection.cs	List <object> types = null;	System.Collections.ArrayList types = null;
+System.Web.UI/StateManagedCollection.cs	AddListItem <int> \(ref indices, i\);	AddArrayListItem (ref indices, i);
+System.Web.UI/StateManagedCollection.cs	AddListItem <object> \(ref states, itemState\);	AddArrayListItem (ref states, itemState);
+System.Web.UI/StateManagedCollection.cs	AddListItem <object> \(ref types, type\);	AddArrayListItem (ref types, type);
+System.Web.UI/StateManagedCollection.cs	AddListItem <object> \(ref types, idx\);	AddArrayListItem (ref types, idx);
+System.Web.UI/StateManagedCollection.cs	void AddListItem <T> \(ref List <T> list, T item\)	void AddArrayListItem (ref System.Collections.ArrayList list, object item)
+System.Web.UI/StateManagedCollection.cs	list = new List <T> \(\);	list = new System.Collections.ArrayList ();
+
+# --- Page._requiresPostBack is a List<string> and Page.SavePageViewState puts it STRAIGHT into view
+#     state, as the Second half of the Pair it persists. The port's ObjectStateFormatter has no native
+#     encoding for List<T> - only ArrayList - so any page containing a control that calls
+#     RegisterRequiresPostBack could not save its view state at all. It threw NotSupportedException
+#     naming List<string>, from SavePageStateToPersistenceMedium, after the page had already run.
+#
+#     The controls that register are the ones implementing IPostBackDataHandler whose value is absent
+#     from the form when "off" - CheckBox and RadioButton above all. A checkbox is not an exotic
+#     control, so this is a general WebForms defect rather than a Dynamic Data one; it surfaced here
+#     because a Boolean field template renders a CheckBox, and the read-only pages that came before it
+#     rendered a disabled one that never registered.
+#
+#     ArrayList throughout, which the formatter already encodes natively and which is what this code
+#     would have used in the framework it was written for. Line-preserving, so a view-state stack trace
+#     still points at upstream line numbers.
+System.Web.UI/Page.cs	List <string> _requiresPostBack;	System.Collections.ArrayList _requiresPostBack;
+System.Web.UI/Page.cs	List <string> _requiresPostBackCopy;	System.Collections.ArrayList _requiresPostBackCopy;
+System.Web.UI/Page.cs	List <string> list1 = null;	System.Collections.ArrayList list1 = null;
+System.Web.UI/Page.cs	list1 = new List <string> \(\);	list1 = new System.Collections.ArrayList ();
+System.Web.UI/Page.cs	_requiresPostBack = new List <string> \(\);	_requiresPostBack = new System.Collections.ArrayList ();
+System.Web.UI/Page.cs	_requiresPostBackCopy = vsr\.Second as List <string>;	_requiresPostBackCopy = vsr.Second as System.Collections.ArrayList;
+System.Web.UI/Page.cs	\(string \[\]\) _requiresPostBackCopy\.ToArray \(\);	(string []) _requiresPostBackCopy.ToArray (typeof (string));
+
+# --- HttpResponse.HeadersWritten. Present on .NET Framework since 4.5 and absent from Mono, and an
+#     application needs it once responses really stream: AppendHeader throws "Headers have been
+#     already sent" the moment anything has been flushed, and without this there is no supported way
+#     to ask first - every guard would have to be a try/catch using an exception as control flow.
+#
+#     On ONE line with the field it exposes, because the rule has to preserve the line count.
+System.Web/HttpResponse.cs	bool headers_sent;	bool headers_sent; public bool HeadersWritten { get { return headers_sent; } }

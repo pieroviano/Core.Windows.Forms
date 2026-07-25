@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+    <Import Project="$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.props" Condition="Exists('$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.props')" />
+    <PropertyGroup>
+        <PackageOutputPath>$(SolutionDir)Packages/</PackageOutputPath>
+        <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+        <Version>$(VersionPrefix).$(VersionSuffix)</Version>
+        <TargetFramework>net10.0</TargetFramework>
+        <AssemblyName>Core.Web.ConfigBridge</AssemblyName>
+        <RootNamespace>System.Web.Configuration.Bridge</RootNamespace>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>disable</ImplicitUsings>
+        <LangVersion>latest</LangVersion>
+        <WebFormsPortIsConfigBridge>true</WebFormsPortIsConfigBridge>
+        <PackageId>AspNet$(AssemblyName)</PackageId>
+        <Description>Lets third-party libraries that read ConfigurationManager.AppSettings see your web.config, by installing a configuration system into the shipping System.Configuration.ConfigurationManager package.</Description>
+    </PropertyGroup>
+    <!--
+    Deliberately references ONLY System.Configuration.ConfigurationManager - never Core.Configuration.
+    That is the whole point: this assembly is the one place in the port compiled against the *package's*
+    configuration types, so it can implement the package's IInternalConfigSystem and construct the
+    package's ConnectionStringSettingsCollection. Everything crossing the boundary to the rest of the
+    port is a primitive or a shared framework type, so the two sets of System.Configuration.* types
+    never meet.
+
+    WebFormsPortIsConfigBridge stops build/WebFormsPort.targets from excluding this project's compile
+    assets, which it does everywhere else.
+  -->
+    <ItemGroup>
+        <PackageReference Include="System.Configuration.ConfigurationManager" Version="8.0.0" />
+        <PackageReference Include="Net4x.NuGetUtility" Version="$(NuGetUtilityVersion)" PrivateAssets="All" />
+    </ItemGroup>
+    <PropertyGroup>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+    </PropertyGroup>
+    <ItemGroup>
+        <Content Include="README.md" Link="README.md" Pack="true" PackagePath="\README.md" />
+        <!-- Travels with the package: an SPDX expression says WHICH licences apply, not to which
+             files. See Directory.Build.props for why the expression is set explicitly. -->
+        <Content Include="$(MSBuildThisFileDirectory)..\THIRD-PARTY-NOTICES.md" Link="THIRD-PARTY-NOTICES.md" Pack="true" PackagePath="\THIRD-PARTY-NOTICES.md" />
+    </ItemGroup>
+    <Import Project="$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.targets" Condition="Exists('$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.targets')" />
+</Project>

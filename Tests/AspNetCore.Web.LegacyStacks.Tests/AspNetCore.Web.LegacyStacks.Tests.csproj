@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    The four stacks that used to be listed as "not ported": System.Web.Mail, arbitrary objects in
+    out-of-process session state, LinqDataSource, and Dynamic Data.
+
+    No application is hosted here. All four are libraries with no dependency on a running request -
+    the serializer works on streams, LinqDataSource and Dynamic Data work on IQueryable, and
+    System.Web.Mail talks to a socket. That keeps the suite fast and lets it run anywhere.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <AssemblyName>AspNetCore.Web.LegacyStacks.Tests</AssemblyName>
+    <RootNamespace>WebFormsPort.LegacyStacksTests</RootNamespace>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <EnableDefaultContentItems>false</EnableDefaultContentItems>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\AspNetCore.Web\AspNetCore.Web.csproj" />
+    <ProjectReference Include="..\..\AspNetCore.Web.Extensions\AspNetCore.Web.Extensions.csproj" />
+    <ProjectReference Include="..\..\AspNetCore.Web.DynamicData\AspNetCore.Web.DynamicData.csproj" />
+  </ItemGroup>
+
+  <Import Project="..\..\Build\WebFormsPort.targets" />
+
+</Project>

@@ -1,0 +1,59 @@
+<Solution>
+  <Folder Name="/Samples/">
+    <Project Path="Samples/MvcSample/MvcSample.csproj" />
+    <Project Path="Samples/WebPagesSample/WebPagesSample.csproj" />
+    <Project Path="Samples/WebApiSample/WebApiSample.csproj" />
+    <Project Path="Samples/WcfSample/WcfSample.csproj" />
+    <Project Path="Samples/SessionStateSample/SessionStateSample.csproj" />
+    <Project Path="Samples/DynamicDataSample/DynamicDataSample.csproj" />
+    <Project Path="Samples/WebFormsSample/WebFormsSample.csproj" />
+    <Project Path="Samples/WebFormsSampleVB/WebFormsSampleVB.vbproj" />
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path="README.md" />
+    <File Path="Articles/running-aspnet-webforms-on-net10-with-kestrel.md" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Nuget.Props" />
+    <File Path="LIMITATIONS.md" />
+    <File Path="Nuget.Config" />
+    <File Path="PORTING-GUIDE.md" />
+    <File Path="REVIEW.md" />
+  </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="Tests/AspNetCore.Web.BrowserTests/AspNetCore.Web.BrowserTests.csproj" />
+    <Project Path="Tests/AspNetCore.Configuration.Tests/AspNetCore.Configuration.Tests.csproj" />
+    <Project Path="Tests/AspNetCore.Web.ConfigBridge.Tests/AspNetCore.Web.ConfigBridge.Tests.csproj" />
+    <Project Path="Tests/AspNetCore.Web.FunctionalTests/AspNetCore.Web.FunctionalTests.csproj" />
+    <Project Path="Tests/AspNetCore.Web.FunctionalTests.VB/AspNetCore.Web.FunctionalTests.VB.csproj" />
+    <Project Path="Tests/AspNetCore.Web.HostingTests/AspNetCore.Web.HostingTests.csproj" />
+    <Project Path="Tests/AspNetCore.Web.LegacyStacks.Tests/AspNetCore.Web.LegacyStacks.Tests.csproj" />
+    <Project Path="Tests/AspNetCore.Web.LegacyStacks.HttpTests/AspNetCore.Web.LegacyStacks.HttpTests.csproj" />
+    <Project Path="Tests/AspNetCore.Web.Mvc.BrowserTests/AspNetCore.Web.Mvc.BrowserTests.csproj" />
+    <Project Path="Tests/AspNetCore.Web.PortTool.Tests/AspNetCore.Web.PortTool.Tests.csproj" />
+    <Project Path="Tests/AspNetCore.Web.WebPages.Tests/AspNetCore.Web.WebPages.Tests.csproj" />
+    <Project Path="Tests/AspNetCore.Web.Http.Tests/AspNetCore.Web.Http.Tests.csproj" />
+    <Project Path="Tests/AspNetCore.Web.Razor.Tests/AspNetCore.Web.Razor.Tests.csproj" />
+    <Project Path="Tests/AspNetCore.Web.ServiceModel.Tests/AspNetCore.Web.ServiceModel.Tests.csproj" />
+    <Project Path="Tests/AspNetCore.Web.SessionState.Tests/AspNetCore.Web.SessionState.Tests.csproj" />
+  </Folder>
+  <Folder Name="/Tools/">
+    <Project Path="Tools/thirdparty-probe/thirdparty-probe.csproj" />
+    <Project Path="Tools/port-project/port-project.csproj" />
+    <Project Path="Tools/verify-config/verify-config.csproj" />
+  </Folder>
+  <Project Path="AspNetCore.Web.ConfigBridge/AspNetCore.Web.ConfigBridge.csproj" />
+  <Project Path="AspNetCore.Web.DynamicData/AspNetCore.Web.DynamicData.csproj" />
+  <Project Path="AspNetCore.Web.Extensions/AspNetCore.Web.Extensions.csproj" />
+  <Project Path="AspNetCore.Web.Hosting.Kestrel/AspNetCore.Web.Hosting.Kestrel.csproj" />
+  <Project Path="AspNetCore.Web.Infrastructure/AspNetCore.Web.Infrastructure.csproj" />
+  <Project Path="AspNetCore.Web.WebPages.Deployment/AspNetCore.Web.WebPages.Deployment.csproj" />
+  <Project Path="AspNetCore.Web.WebPages/AspNetCore.Web.WebPages.csproj" />
+  <Project Path="AspNetCore.Web.WebPages.Razor/AspNetCore.Web.WebPages.Razor.csproj" />
+  <Project Path="AspNetCore.Web.Http.WebHost/AspNetCore.Web.Http.WebHost.csproj" />
+  <Project Path="AspNetCore.Net.Http.Formatting/AspNetCore.Net.Http.Formatting.csproj" />
+  <Project Path="AspNetCore.Web.Optimization/AspNetCore.Web.Optimization.csproj" />
+  <Project Path="AspNetCore.Web.Razor/AspNetCore.Web.Razor.csproj" />
+  <Project Path="AspNetCore.Web.ServiceModel/AspNetCore.Web.ServiceModel.csproj" />
+  <Project Path="AspNetCore.Web.Services/AspNetCore.Web.Services.csproj" />
+  <Project Path="AspNetCore.Web/AspNetCore.Web.csproj" />
+</Solution>

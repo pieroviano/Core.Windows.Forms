@@ -1,0 +1,150 @@
+# Upstream files dropped from the port. Matched as substrings against the paths in
+# mono/mcs/class/System.Web/System.Web.dll.sources, so a trailing / drops a whole directory.
+# See PORT-System.Web-Kestrel-PLAN.md section 7.
+
+# --- System.Web.Mail is PORTED, not excluded.
+#
+#     It is obsolete - System.Net.Mail superseded it in .NET 2.0 - but an application being ported did
+#     not choose that, and rewriting every SmtpMail.Send call site is work the port can absorb instead.
+#     Mono's implementation is pure managed SMTP with no CDO/COM anywhere, so it compiles on CoreCLR.
+
+# --- Consts.cs is generated (Consts.cs.in); we emit Core.Web/Generated/Consts.cs instead ---
+build/common/Consts.cs
+
+# --- AppDomain / remoting based hosting (plan P1) ---
+System.Web.Hosting/AppDomainFactory.cs
+System.Web.Hosting/AppManagerAppDomainFactory.cs
+System.Web.Hosting/IAppDomainFactory.cs
+System.Web.Hosting/IAppManagerAppDomainFactory.cs
+System.Web.Hosting/ApplicationManager.cs
+System.Web.Hosting/ApplicationInfo.cs
+System.Web.Hosting/ISAPIRuntime.cs
+System.Web.Hosting/IISAPIRuntime.cs
+
+# --- .asmx / wsdl / xsd build providers (plan P2) ---
+# NOTE: WebServiceCompiler is deliberately NOT excluded. Despite the name it has no
+# System.Web.Services dependency at all, and it is the compiler for .ashx web handlers
+# (WebHandlerParser) as well as .asmx - dropping it would take generic HTTP handlers with it.
+System.Web.Compilation/WsdlBuildProvider.cs
+System.Web.Compilation/XsdBuildProvider.cs
+System.Web.Compilation/AppWebReferencesCompiler.cs
+System.Web.Compilation/ClientBuildManager.cs
+System.Web.Compilation/ClientBuildManagerCallback.cs
+System.Web.Compilation/BuildManagerHost.cs
+
+# --- out-of-proc session state (plan: in-proc only for v1) ---
+System.Web.SessionState_2.0/RemoteStateServer.cs
+System.Web.SessionState_2.0/SessionStateServerHandler.cs
+
+# NOTE: CacheItemPriorityQueueDebug.cs is NOT excluded either. It is the #if DEBUG half of
+# CacheItemPriorityQueue (InitDebugMode/AddSequenceEntry/EDSequenceEntryType), and the SDK defines
+# DEBUG for Debug builds, so excluding it breaks the Debug configuration outright. Its only
+# platform issue is an AppDomain.DomainUnload subscription that never fires on .NET Core - it would
+# have dumped a cache priority-queue trace at shutdown.
+
+# --- pulls in System.Design's typed-dataset generator ---
+System.Design/System.Data.Design/TypedDataSetGenerator.cs
+
+# --- second copy of the assembly-level attributes (ApplicationServices is folded into
+#     System.Web here, so only System.Web/Assembly/AssemblyInfo.cs applies) ---
+System.Web.ApplicationServices/Assembly/AssemblyInfo.cs
+
+# --- IIS custom loader; needs System.Runtime.Remoting's IObjectHandle ---
+referencesource/System.Web/Hosting/ICustomLoader.cs
+
+# --- Mono.Data.Sqlite backed providers (out of scope; SQL Server providers are kept) ---
+System.Web.Profile/SqliteProfileProvider.cs
+System.Web.Security/SqliteMembershipProvider.cs
+System.Web.Security/SqliteRoleProvider.cs
+
+# --- ResXResourceSet derives from ResourceSet and writes its `Reader`/`Table` members, which are
+#     private on .NET Core. Nothing in System.Web references the type (checked) - only
+#     ResXResourceReader/Writer are used, and those compile fine - so it is dropped rather than
+#     reimplemented.
+System.Windows.Forms/System.Resources/ResXResourceSet.cs
+
+# --- Core.Configuration: two types are declared in BOTH mono's System.dll and its
+#     System.Configuration.dll trees.
+#
+#     ConfigNameValueCollection: keep the System.dll copy. The two files are NOT interchangeable -
+#     System.dll's ConfigHelper.cs declares ConfigHelper (which the 1.x section handlers need) AND
+#     ConfigNameValueCollection, while System.Configuration's declares only the latter. Excluding
+#     the System.dll copy takes ConfigHelper down with it.
+System.Configuration/System.Configuration/ConfigHelper.cs
+#     IConfigXmlNode: identical in both; keep the System.Configuration copy.
+System/System.Configuration/IConfigXmlNode.cs
+
+# --- <uri> configuration section from mono's System.dll. Needs System.UriIdnScope, which .NET
+#     forwards to the System.Configuration.ConfigurationManager package whose compile assets this
+#     port excludes. Nothing in WebForms reads <uri>.
+System/System.Configuration/IdnElement.cs
+System/System.Configuration/IriParsingElement.cs
+System/System.Configuration/UriSection.cs
+
+# --- Core.Web.Extensions: the parts that depend on assemblies this port does not provide.
+#     ScriptManager, UpdatePanel, ScriptResource.axd, the client-script infrastructure and the
+#     3.5-era data controls (ListView, DataPager) are all kept.
+#
+#     Script.Services (page methods, [ScriptService] .asmx, the authentication/profile services) is
+#     NO LONGER excluded: it needs System.Web.Services, which this port now provides as
+#     Core.Web.Services. The one remaining dependency it cannot satisfy is System.ServiceModel -
+#     LogicalTypeInfo's WcfLogicalTypeInfo half, reached only for a [ServiceContract] type, i.e. a WCF
+#     .svc endpoint, which nothing in this port hosts. That half lives in an Override rather than an
+#     exclusion so the ASMX half of the same file stays compiled in place: see
+#     Core.Web.Extensions/Overrides/System.Web.Script.Services__LogicalTypeInfo.cs.
+#     LinqDataSource needs System.Data.Linq (LINQ to SQL), which is not part of .NET Core.
+System.Web.Extensions/System.Web.UI.WebControls/LinqDataSource
+System.Web.Extensions/System.Web.Query.Dynamic/
+
+# --- Core.Web.Services: the WSDL/DISCO *code generation* half. These turn a WSDL document into
+#     client proxy source (what wsdl.exe and "Add Web Reference" did) and need
+#     XmlCodeExporter / SoapCodeExporter / SoapSchemaImporter / System.Xml.Serialization.Advanced,
+#     none of which .NET Core carries - the serialization codegen story was not ported.
+#     SERVING .asmx does not depend on them; generating a client proxy from WSDL does.
+referencesource/System.Web.Services/System/Web/Services/Description/SoapProtocolImporter.cs
+referencesource/System.Web.Services/System/Web/Services/Description/MimeXmlImporter.cs
+#     These three only exist to extend SoapProtocolImporter, so they go with it.
+referencesource/System.Web.Services/System/Web/Services/Description/Soap12ProtocolImporter.cs
+referencesource/System.Web.Services/System/Web/Services/Description/SoapExtensionImporter.cs
+referencesource/System.Web.Services/System/Web/Services/Description/SoapTransportImporter.cs
+referencesource/System.Web.Services/System/Web/Services/Description/SoapHttpTransportImporter.cs
+#     DISCO discovery through Active Directory; needs System.DirectoryServices.
+referencesource/System.Web.Services/System/Web/Services/Discovery/DynamicVirtualDiscoSearcher.cs
+#     WebCodeGenerator emits client proxy source (XmlMemberMapping.GenerateTypeName is codegen-only);
+#     DiscoveryRequestHandler's dynamic-discovery branch needs the excluded AD searcher.
+referencesource/System.Web.Services/System/Web/Services/Description/WebCodeGenerator.cs
+referencesource/System.Web.Services/System/Web/Services/Discovery/DiscoveryRequestHandler.cs
+referencesource/System.Web.Services/System/Web/Services/Description/ProtocolImporter.cs
+referencesource/System.Web.Services/System/Web/Services/Description/HttpProtocolImporter.cs
+referencesource/System.Web.Services/System/Web/Services/Description/HttpGetProtocolImporter.cs
+referencesource/System.Web.Services/System/Web/Services/Description/MimeImporter.cs
+referencesource/System.Web.Services/System/Web/Services/Description/MimeAnyImporter.cs
+referencesource/System.Web.Services/System/Web/Services/Description/MimeFormImporter.cs
+referencesource/System.Web.Services/System/Web/Services/Description/HttpPostProtocolImporter.cs
+referencesource/System.Web.Services/System/Web/Services/Description/MimeTextImporter.cs
+referencesource/System.Web.Services/System/Web/Services/Description/ServiceDescriptionImporter.cs
+referencesource/System.Web.Services/System/Web/Services/Description/WebReference.cs
+referencesource/System.Web.Services/System/Web/Services/Description/WebReferenceOptions.cs
+referencesource/System.Web.Services/System/Web/Services/Description/WebReferenceCollection.cs
+
+# --- Core.Web.Mvc: the System.Data.Linq.Binary model binder. LINQ to SQL does not exist on
+#     .NET Core, so no request can ever carry a Binary and the binder has nothing to bind.
+#     Its registration in ModelBinders.cs, and the two Html helpers that special-case Binary,
+#     are patched out in tools/port-patches.txt.
+aspnetwebstack/src/System.Web.Mvc/LinqBinaryModelBinder.cs
+
+# --- Core.Net.Http.Formatting: the VENDORED Newtonsoft.Json source.
+#
+#     The upstream manifest compiles Json.NET in place from mono/external/Newtonsoft.Json, because
+#     mono's build had no NuGet. That copy is a decade old and does not compile on .NET 10 - it
+#     uses AppDomain.DefineDynamicAssembly, ReflectionPermission/SecurityPermission and
+#     ConfigurationManager. Referencing the supported package instead is both less code and less
+#     risk, and the formatter binds to the same public API either way.
+external/Newtonsoft.Json/
+
+# --- Dynamic Data's LINQ to SQL model provider. Dynamic Data reads its model through the abstract
+#     DataModelProvider/TableProvider/ColumnProvider triple, and DLinq* is upstream's only
+#     implementation of it - over System.Data.Linq, which does not exist on .NET. The scaffolding
+#     itself is provider-agnostic and compiles fine; see
+#     AspNetCore.Web.DynamicData/Port/QueryableDataModelProvider.cs for the replacement.
+System.Web.DynamicData.ModelProviders/DLinq

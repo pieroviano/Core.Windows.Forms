@@ -1,0 +1,8 @@
+@{
+    // A second page, to prove routing is per-file rather than one hard-coded default.
+    Layout = "~/_Layout.cshtml";
+    Page.Title = "Helpers";
+}
+<h1 id="heading">Helpers</h1>
+<p id="path">@Request.Path</p>
+<p id="method">@Request.HttpMethod</p>

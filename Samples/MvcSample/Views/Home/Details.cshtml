@@ -1,0 +1,8 @@
+@model MvcSample.Controllers.Widget
+@{
+    ViewBag.Title = "Details";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<h1>Widget details</h1>
+<p id="detail">@Model.Id / @Model.Name / @Model.Price</p>
+<p id="encoded">@("<script>alert(1)</script>")</p>

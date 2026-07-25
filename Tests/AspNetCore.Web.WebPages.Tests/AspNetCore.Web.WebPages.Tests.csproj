@@ -1,0 +1,47 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Functional tests for ASP.NET Web Pages on the port: standalone .cshtml files served with no
+    controller and no route table, against Samples/WebPagesSample.
+
+    HTTP rather than a browser, unlike the MVC suite. What distinguishes Web Pages is its ROUTING
+    rules - extensionless URLs, the default document, and the refusal to serve an underscore-prefixed
+    file - and those are status codes. A browser would add nothing but time.
+
+    Its own project because the ported runtime hosts one application per process.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>WebFormsPort.WebPagesTests</RootNamespace>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <EnableDefaultContentItems>false</EnableDefaultContentItems>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\AspNetCore.Web.Hosting.Kestrel\AspNetCore.Web.Hosting.Kestrel.csproj" />
+    <ProjectReference Include="..\..\AspNetCore.Web.WebPages\AspNetCore.Web.WebPages.csproj" />
+    <ProjectReference Include="..\..\AspNetCore.Web.WebPages.Razor\AspNetCore.Web.WebPages.Razor.csproj" />
+    <ProjectReference Include="..\..\Samples\WebPagesSample\WebPagesSample.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\AspNetCore.Web.FunctionalTests\Infrastructure\RepoPaths.cs"
+             Link="Infrastructure\RepoPaths.cs" />
+  </ItemGroup>
+
+  <Import Project="..\..\Build\WebFormsPort.targets" />
+
+</Project>

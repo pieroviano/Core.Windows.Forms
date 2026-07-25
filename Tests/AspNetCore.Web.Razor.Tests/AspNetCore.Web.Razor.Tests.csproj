@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Tests for Core.Web.Razor - the Razor parser and code generator, ported from
+    Mono/external/aspnetwebstack.
+
+    Unlike every other test project here this one needs no server and no runtime initialisation:
+    System.Web.Razor has no System.Web dependency at all (upstream LIB_REFS = System System.Core).
+    Text goes in, a CodeCompileUnit comes out. That isolation is why Razor was ported first.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>WebFormsPort.RazorTests</RootNamespace>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+    <!-- To render the generated CodeCompileUnit back to C# and assert on it, which is exactly what
+         the .aspx pipeline does before handing source to Roslyn. -->
+    <PackageReference Include="System.CodeDom" Version="9.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\AspNetCore.Web.Razor\AspNetCore.Web.Razor.csproj" />
+  </ItemGroup>
+
+</Project>

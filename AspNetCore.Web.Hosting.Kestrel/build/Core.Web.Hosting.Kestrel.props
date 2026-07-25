@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+
+  <!--
+    Shipped in the build/ folder of the Core.Web.Hosting.Kestrel package, so every project that
+    references it picks this up automatically.
+
+    This half only declares the switches. The nesting itself lives in the .targets beside this file,
+    and it has to: a package's build/*.props is imported by Microsoft.Common.props, which runs BEFORE
+    the SDK defines the default Compile/None globs - so an <Compile Update="**\*.aspx.cs" /> here would
+    match nothing at all. The .targets is imported at the end, once the items exist, which is also
+    early enough for Solution Explorer, because item nesting is read from the EVALUATED project rather
+    than from anything a target produces.
+  -->
+
+  <PropertyGroup>
+    <!--
+      Nest code-behind and designer files under their markup file, the way a classic ASP.NET web
+      project looked in Visual Studio:
+
+          Default.aspx
+            +- Default.aspx.cs
+            +- Default.aspx.designer.cs
+
+      Set to false to leave the project tree flat.
+    -->
+    <WebFormsNestCodeBehind Condition="'$(WebFormsNestCodeBehind)' == ''">true</WebFormsNestCodeBehind>
+
+    <!--
+      Markup extensions whose code-behind is nested. Semicolon-separated, without the dot. Override to
+      add your own; the default is the set that has ever had a code-behind file in a WebForms project -
+      pages, user controls, master pages, handlers, web services, and Global.asax.
+    -->
+    <WebFormsMarkupExtensions Condition="'$(WebFormsMarkupExtensions)' == ''">aspx;ascx;master;ashx;asmx;asax</WebFormsMarkupExtensions>
+  </PropertyGroup>
+
+  <!--
+    ==========================================================================================
+    Content items.
+
+    A ported application's markup is CONTENT the runtime reads and compiles at request time, not
+    compile input. Every consumer therefore needs the same dozen globs copying .aspx/.ascx/.master/
+    .cshtml/web.config/... next to the assembly - which is a lot of identical XML to ask each of them
+    to write, and to get subtly wrong.
+
+    So the globs live here instead. Set WebFormsIncludeContent to false to turn the whole thing off
+    and declare your own.
+    ==========================================================================================
+  -->
+  <PropertyGroup>
+    <WebFormsIncludeContent Condition="'$(WebFormsIncludeContent)' == ''">true</WebFormsIncludeContent>
+
+    <!--
+      What gets copied beside the built assembly. Add your own rather than replacing the list unless
+      you mean to drop one:
+
+          <WebFormsContentGlobs>$(WebFormsContentGlobs);**\*.myext</WebFormsContentGlobs>
+
+      "**\*.config" covers web.config at every level. "**\*.svc" is here so a WCF endpoint needs no
+      extra glob of its own.
+
+      Spelled out as literal globs rather than derived from a list of extensions, and that is forced
+      rather than chosen: MSBuild ESCAPES wildcard characters when an item transform flows into a
+      property, so building this string with @(Extensions->'**\*.%(Identity)') yields "**%2A.aspx" and
+      the Include matches nothing. The failure is loud (MSB3030, "could not copy ...\**\*.aspx") but
+      the cause is not, so it is written the boring way on purpose.
+    -->
+    <WebFormsContentGlobs Condition="'$(WebFormsContentGlobs)' == ''">**\*.aspx;**\*.ascx;**\*.master;**\*.cshtml;**\*.vbhtml;**\*.ashx;**\*.asmx;**\*.asax;**\*.svc;**\*.skin;**\*.sitemap;**\*.browser;**\*.config;**\*.resx;**\*.css;**\*.js</WebFormsContentGlobs>
+
+    <!--
+      EVERY content glob has to exclude these. The globs are recursive, so once a build has copied the
+      site into bin\ they match those copies too - the output then nests one level deeper on every
+      build until Rebuild fails outright with MSB3030.
+    -->
+    <WebFormsContentExclude Condition="'$(WebFormsContentExclude)' == ''">bin\**;obj\**</WebFormsContentExclude>
+
+    <!--
+      App_Code is compiled AT RUNTIME by BuildManager into its own assembly, exactly as ASP.NET always
+      did. The SDK must NOT also compile it into the application assembly - that would define every
+      type twice and make them ambiguous to generated pages, which surfaces as a page-compile error
+      naming a type that looks perfectly fine.
+    -->
+    <WebFormsAppCodeAsContent Condition="'$(WebFormsAppCodeAsContent)' == ''">true</WebFormsAppCodeAsContent>
+
+    <!--
+      The Web SDK's own content globs have to be off. They double up with the ones in the .targets,
+      they follow different rules about bin\, and - the one that actually bites - the Razor SDK builds
+      its compile list from Content items, so leaving them on makes it COMPILE every .cshtml as an
+      ASP.NET Core Razor view. A Web Pages file then fails with CS0103 on Page, Request and IsPost:
+      names that do not exist in that world, in a file that was never meant to go through that
+      compiler.
+
+      Written as its own switch rather than Condition="'$(EnableDefaultContentItems)' == ''", because
+      that test is only true in one of the two ways this file gets imported. Through a
+      PackageReference it lands via Microsoft.Common.props, before the Web SDK sets the default, and
+      the empty test holds. Imported explicitly from the top of a project body - which is what the
+      projects inside this repository do - the Web SDK has ALREADY set it to true, the condition is
+      false, and the override silently does nothing.
+
+      Set WebFormsDisableDefaultContentItems to false to keep the SDK's content items (and then set
+      WebFormsIncludeContent to false as well, or you get both sets).
+    -->
+    <WebFormsDisableDefaultContentItems Condition="'$(WebFormsDisableDefaultContentItems)' == ''">true</WebFormsDisableDefaultContentItems>
+    <EnableDefaultContentItems Condition="'$(WebFormsIncludeContent)' == 'true' And '$(WebFormsDisableDefaultContentItems)' == 'true'">false</EnableDefaultContentItems>
+
+    <!--
+      Implicit usings put Microsoft.AspNetCore.Builder and friends in global scope, where HttpContext,
+      IHttpHandler and RouteData collide with the System.Web types of the same name. Every such clash
+      is a compile error in code that was correct on .NET Framework, so the default is off.
+    -->
+    <ImplicitUsings Condition="'$(ImplicitUsings)' == ''">disable</ImplicitUsings>
+  </PropertyGroup>
+
+</Project>

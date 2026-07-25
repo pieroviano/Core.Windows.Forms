@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+    <Import Project="$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.props" Condition="Exists('$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.props')" />
+    <!--
+    Microsoft.Web.Infrastructure - the dynamic module registration helper the Web Stack uses to add
+    HTTP modules without a web.config edit. Nine files, no dependencies worth naming.
+  -->
+    <PropertyGroup>
+        <!-- Every port assembly is packable, like the rest of the port. -->
+        <PackageOutputPath>$(SolutionDir)Packages/</PackageOutputPath>
+        <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+        <Version>$(VersionPrefix).$(VersionSuffix)</Version>
+        <TargetFramework>net10.0</TargetFramework>
+        <AssemblyName>Core.Web.Infrastructure</AssemblyName>
+        <RootNamespace>Microsoft.Web.Infrastructure</RootNamespace>
+        <LangVersion>latest</LangVersion>
+        <Nullable>disable</Nullable>
+        <ImplicitUsings>disable</ImplicitUsings>
+        <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+        <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+        <NoWarn>$(NoWarn);612;618;436;1591;0108;0114;0067;0162;0169;0219;0414;0649;3021;SYSLIB0003;SYSLIB0011;SYSLIB0012;SYSLIB0021;SYSLIB0022;SYSLIB0023;CS8981</NoWarn>
+        <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+        <WarningLevel>0</WarningLevel>
+        <DebugType>portable</DebugType>
+        <AspNetWebStackDir>$(MSBuildThisFileDirectory)..\Mono\external\aspnetwebstack\src\</AspNetWebStackDir>
+        <DefineConstants>$(DefineConstants);ASPNETWEBPAGES</DefineConstants>
+        <DefineConstants>$(DefineConstants);NET_4_0;NET_4_5;MONO;SYSTEM_WEB_PORT</DefineConstants>
+        <PackageId>AspNet$(AssemblyName)</PackageId>
+        <Description>System.Web.Infrastructure on .NET 10 - the dynamic module registration point that PreApplicationStartMethod uses. Arrives transitively.</Description>
+    </PropertyGroup>
+    <!-- Upstream sources, compiled in place. Regenerate with: Tools/gen-sources.ps1 -->
+    <Import Project="Sources.generated.props" />
+    <ItemGroup>
+        <Compile Include="Generated\**\*.cs" />
+        <Compile Include="Overrides\**\*.cs" />
+        <Compile Include="Port\**\*.cs" />
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Net4x.NuGetUtility" Version="$(NuGetUtilityVersion)" PrivateAssets="All" />
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\AspNetCore.Web\AspNetCore.Web.csproj" />
+    </ItemGroup>
+    <!-- Removes the empty .NET System.Web.dll facade; see the file for why this is not optional. -->
+    <PropertyGroup>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+    </PropertyGroup>
+    <ItemGroup>
+        <Content Include="README.md" Link="README.md" Pack="true" PackagePath="\README.md" />
+        <!-- Travels with the package: an SPDX expression says WHICH licences apply, not to which
+             files. See Directory.Build.props for why the expression is set explicitly. -->
+        <Content Include="$(MSBuildThisFileDirectory)..\THIRD-PARTY-NOTICES.md" Link="THIRD-PARTY-NOTICES.md" Pack="true" PackagePath="\THIRD-PARTY-NOTICES.md" />
+    </ItemGroup>
+    <Import Project="..\Build\WebFormsPort.targets" />
+    <Import Project="$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.targets" Condition="Exists('$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.targets')" />
+</Project>

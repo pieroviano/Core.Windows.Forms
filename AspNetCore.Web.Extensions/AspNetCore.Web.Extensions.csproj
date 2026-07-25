@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+    <Import Project="$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.props" Condition="Exists('$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.props')" />
+    <PropertyGroup>
+        <PackageOutputPath>$(SolutionDir)Packages/</PackageOutputPath>
+        <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+        <Version>$(VersionPrefix).$(VersionSuffix)</Version>
+        <AssemblyName>Core.Web.Extensions</AssemblyName>
+        <RootNamespace>System.Web</RootNamespace>
+        <TargetFramework>net10.0</TargetFramework>
+        <LangVersion>latest</LangVersion>
+        <Nullable>disable</Nullable>
+        <ImplicitUsings>disable</ImplicitUsings>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+        <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+        <NoWarn>$(NoWarn);612;618;436;1591;0108;0114;0067;0162;0169;0219;0414;0649;3021;SYSLIB0003;SYSLIB0011;SYSLIB0012;SYSLIB0021;SYSLIB0022;SYSLIB0023;CS8981</NoWarn>
+        <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+        <WarningLevel>0</WarningLevel>
+        <DebugType>portable</DebugType>
+        <MonoAjaxLibDir>$(MSBuildThisFileDirectory)..\mono\mcs\class\MicrosoftAjaxLibrary\System.Web.Extensions\3.5.0.0\3.5.21022.8\</MonoAjaxLibDir>
+        <MonoExtensionsDir>$(MSBuildThisFileDirectory)..\mono\mcs\class\System.Web.Extensions\</MonoExtensionsDir>
+        <DefineConstants>$(DefineConstants);NET_1_1;NET_2_0;NET_3_5;NET_4_0;NET_4_5;SYSTEM_WEB_PORT;MONO</DefineConstants>
+        <DefineConstants>$(DefineConstants);SYSTEM_WEB_EXTENSIONS</DefineConstants>
+        <PackageId>AspNet$(AssemblyName)</PackageId>
+        <Description>System.Web.Extensions on .NET 10 - ScriptManager, UpdatePanel, partial rendering, page methods, and a LinqDataSource rewritten against IQueryable.</Description>
+    </PropertyGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\AspNetCore.Web\AspNetCore.Web.csproj" />
+        <!-- System.Web.Script.Services is the client-script bridge to [WebMethod] endpoints - page
+         methods and [ScriptService] .asmx services - so it needs WebMethodAttribute,
+         WebServiceHandlerFactory, WebServiceParser and System.Web.Services.Protocols.
+
+         Do not remove: without it the build fails with ~34 CS0234/CS0246 errors saying
+         "the type or namespace name 'Services' does not exist in the namespace 'System.Web'". -->
+        <ProjectReference Include="..\AspNetCore.Web.Services\AspNetCore.Web.Services.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Net4x.NuGetUtility" Version="$(NuGetUtilityVersion)" PrivateAssets="All" />
+        <PackageReference Include="System.Drawing.Common" Version="8.0.0" />
+    </ItemGroup>
+    <Import Project="Sources.generated.props" />
+    <ItemGroup>
+        <!-- The Microsoft AJAX client library, embedded with the EXACT names mcs gave it (bare file
+         names): ScriptReferenceBase cross-checks each [assembly: WebResource] declaration against a
+         real embedded resource and throws InvalidOperationException naming the resource if it is
+         missing, so every page with a ScriptManager fails outright until these are present.
+         Only the six the Makefile embeds - the localised and .jvm variants are not declared. -->
+        <EmbeddedResource Include="$(MonoAjaxLibDir)MicrosoftAjax.js" LogicalName="MicrosoftAjax.js" />
+        <EmbeddedResource Include="$(MonoAjaxLibDir)MicrosoftAjax.debug.js" LogicalName="MicrosoftAjax.debug.js" />
+        <EmbeddedResource Include="$(MonoAjaxLibDir)MicrosoftAjaxTimer.js" LogicalName="MicrosoftAjaxTimer.js" />
+        <EmbeddedResource Include="$(MonoAjaxLibDir)MicrosoftAjaxTimer.debug.js" LogicalName="MicrosoftAjaxTimer.debug.js" />
+        <EmbeddedResource Include="$(MonoAjaxLibDir)MicrosoftAjaxWebForms.js" LogicalName="MicrosoftAjaxWebForms.js" />
+        <EmbeddedResource Include="$(MonoAjaxLibDir)MicrosoftAjaxWebForms.debug.js" LogicalName="MicrosoftAjaxWebForms.debug.js" />
+        <EmbeddedResource Include="$(MonoExtensionsDir)Resources\MicrosoftAjaxExtension.js" LogicalName="MicrosoftAjaxExtension.js" />
+        <EmbeddedResource Include="$(MonoExtensionsDir)Resources\MicrosoftAjaxWebFormsExtension.js" LogicalName="MicrosoftAjaxWebFormsExtension.js" />
+    </ItemGroup>
+    <ItemGroup>
+        <Compile Include="Generated\**\*.cs" />
+        <Compile Include="Port\**\*.cs" />
+        <Compile Include="Overrides\**\*.cs" />
+    </ItemGroup>
+    <Import Project="..\build\WebFormsPort.targets" />
+    <PropertyGroup>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+    </PropertyGroup>
+    <ItemGroup>
+        <Content Include="README.md" Link="README.md" Pack="true" PackagePath="\README.md" />
+        <!-- Travels with the package: an SPDX expression says WHICH licences apply, not to which
+             files. See Directory.Build.props for why the expression is set explicitly. -->
+        <Content Include="$(MSBuildThisFileDirectory)..\THIRD-PARTY-NOTICES.md" Link="THIRD-PARTY-NOTICES.md" Pack="true" PackagePath="\THIRD-PARTY-NOTICES.md" />
+    </ItemGroup>
+    <Import Project="$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.targets" Condition="Exists('$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.targets')" />
+</Project>

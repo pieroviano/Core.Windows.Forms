@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <!-- The package ships these in its build/ folder and NuGet imports them automatically for a
+       PackageReference. These samples use a ProjectReference instead, which carries no build/ assets,
+       so they are imported by hand to get the same result. Order matters: the .props declares the
+       switches, the .targets declares the items and must come after the SDK's own globs. -->
+  <Import Project="..\..\AspNetCore.Web.Hosting.Kestrel\build\Core.Web.Hosting.Kestrel.props" />
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <OutputType>Exe</OutputType>
+    <!-- Deliberately EMPTY. VB prepends RootNamespace to every declaration, so with the default
+         (the project name) a file declaring "Namespace WebFormsSampleVB" produces
+         WebFormsSampleVB.WebFormsSampleVB.DefaultPage - and Inherits="WebFormsSampleVB.DefaultPage"
+         in the .aspx then fails with "Cannot find type". Keeping it empty means the namespace written
+         in the source is the namespace that exists, which is what the .aspx directives name. -->
+    <RootNamespace></RootNamespace>
+    <!-- The host is a plain VB console/web app; the WebForms pages are compiled at runtime. -->
+    <StartupObject>WebFormsSampleVB.Program</StartupObject>
+    <OptionStrict>Off</OptionStrict>
+    <OptionExplicit>On</OptionExplicit>
+    <OptionInfer>On</OptionInfer>
+    <!-- Sample apps are not packages. The Web SDK already defaults IsPackable=false, but
+         Directory.Build.props turns on GeneratePackageOnBuild for the packable port projects, and
+         inherited here that drives Pack over a non-packable app on every build - which warns. Turn it
+         back off: there is nothing to pack. (The test projects avoid this by using the plain SDK,
+         which does not set WarnOnPackingNonPackableProject.) -->
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\AspNetCore.Web.Hosting.Kestrel\AspNetCore.Web.Hosting.Kestrel.csproj" />
+  </ItemGroup>
+
+  <Import Project="..\..\build\WebFormsPort.targets" />
+
+  <Import Project="..\..\AspNetCore.Web.Hosting.Kestrel\build\Core.Web.Hosting.Kestrel.targets" />
+
+</Project>

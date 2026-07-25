@@ -1,0 +1,48 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Functional tests for Core.Configuration - Mono's System.Configuration as this port uses it.
+
+    A separate project because these run WITHOUT a web server but WITH the runtime initialised, and
+    because WebConfigurationManager.Init installs HttpConfigurationSystem process-wide and extracts
+    the embedded machine.config as a side effect. Sharing a process with the HTTP suite would mean
+    testing configuration that some earlier request had already warmed.
+
+    This is what tools/verify-config does as a diagnostic, expressed as assertions.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>WebFormsPort.ConfigurationTests</RootNamespace>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- WebFormsRuntimeHost is what bootstraps the configuration system; the tests go through it
+         rather than reproducing its AppDomain-data setup. -->
+    <ProjectReference Include="..\..\AspNetCore.Web.Hosting.Kestrel\AspNetCore.Web.Hosting.Kestrel.csproj" />
+    <!-- The sample application's web.config is the fixture. Referenced so the types its
+         <httpModules>/<httpHandlers> name resolve when those sections are materialised. -->
+    <ProjectReference Include="..\..\Samples\WebFormsSample\WebFormsSample.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\AspNetCore.Web.FunctionalTests\Infrastructure\RepoPaths.cs"
+             Link="Infrastructure\RepoPaths.cs" />
+  </ItemGroup>
+
+  <Import Project="..\..\Build\WebFormsPort.targets" />
+
+</Project>

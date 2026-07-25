@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>@ViewBag.Title - MVC on Kestrel</title>
+</head>
+<body>
+    <div id="chrome-header">[layout header]</div>
+    @RenderBody()
+    @if (IsSectionDefined("Footer"))
+    {
+        @RenderSection("Footer")
+    }
+    <div id="chrome-footer">[layout footer]</div>
+</body>
+</html>

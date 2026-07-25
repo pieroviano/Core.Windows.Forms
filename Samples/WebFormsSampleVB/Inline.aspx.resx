@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- A .resx beside its page, in the VB sample. Inert at runtime; ASP.NET only compiles resources
+       under App_LocalResources/ and App_GlobalResources/. -->
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter</value></resheader>
+  <data name="Caption"><value>caption from a page-adjacent resx (VB)</value></data>
+</root>

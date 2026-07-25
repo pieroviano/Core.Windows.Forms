@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <!-- The package ships these in its build/ folder and NuGet imports them automatically for a
+       PackageReference. These samples use a ProjectReference instead, which carries no build/ assets,
+       so they are imported by hand to get the same result: the content globs, App_Code handling and
+       code-behind nesting that every ported project would otherwise repeat. -->
+  <Import Project="..\..\AspNetCore.Web.Hosting.Kestrel\build\Core.Web.Hosting.Kestrel.props" />
+
+  <!--
+    A WebForms application configured for out-of-process session state.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <!-- Sample apps are not packages. The Web SDK already defaults IsPackable=false, but
+         Directory.Build.props turns on GeneratePackageOnBuild for the packable port projects, and
+         inherited here that drives Pack over a non-packable app on every build - which warns. Turn it
+         back off: there is nothing to pack. (The test projects avoid this by using the plain SDK,
+         which does not set WarnOnPackingNonPackableProject.) -->
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <!-- Microsoft.Data.SqlClient arrives through Core.Web.SessionState and requires 9.x. -->
+    <WebFormsPortConfigurationManagerVersion>9.0.11</WebFormsPortConfigurationManagerVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\AspNetCore.Web.Hosting.Kestrel\AspNetCore.Web.Hosting.Kestrel.csproj" />
+      <ProjectReference Include="..\..\AspNetCore.Web.SessionState\AspNetCore.Web.SessionState.csproj" />
+  </ItemGroup>
+
+  <Import Project="..\..\Build\WebFormsPort.targets" />
+
+  <Import Project="..\..\AspNetCore.Web.Hosting.Kestrel\build\Core.Web.Hosting.Kestrel.targets" />
+
+</Project>

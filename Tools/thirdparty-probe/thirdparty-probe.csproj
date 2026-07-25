@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Stands in for a third-party dependency: compiled against the REAL
+       System.Configuration.ConfigurationManager package, with none of this port's build logic
+       imported. If Core.Configuration.Facade works, this assembly's calls land on the ported
+       configuration system and see web.config; if it does not, they see nothing (or fail to load).
+       That makes it the only honest test of the facade. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>ThirdPartyProbe</AssemblyName>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="8.0.0" />
+  </ItemGroup>
+
+</Project>

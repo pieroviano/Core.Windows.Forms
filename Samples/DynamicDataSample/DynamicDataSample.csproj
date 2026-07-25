@@ -1,0 +1,45 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <!-- The package ships these in its build/ folder and NuGet imports them automatically for a
+       PackageReference. These samples use a ProjectReference instead, which carries no build/ assets,
+       so they are imported by hand to get the same result: the content globs, App_Code handling and
+       code-behind nesting that every ported project would otherwise repeat. -->
+  <Import Project="..\..\AspNetCore.Web.Hosting.Kestrel\build\Core.Web.Hosting.Kestrel.props" />
+
+  <!--
+    ASP.NET Dynamic Data and LinqDataSource, on the port, under Kestrel.
+
+    Both were listed as unported for one reason - they were built on LINQ to SQL - and both now run on
+    IQueryable instead. This sample is deliberately built on a context that is NOT EF Core: ShopContext
+    holds List<T> and exposes them as IQueryable. That is the point. Nothing in the port references EF
+    Core, the model provider finds the shape by reflection, and an in-memory context proves it without
+    dragging a database into a sample application.
+
+    The .aspx files here are CONTENT, compiled by BuildManager at request time - including everything
+    under DynamicData\, which the default content globs pick up.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <!-- Sample apps are not packages. The Web SDK already defaults IsPackable=false, but
+         Directory.Build.props turns on GeneratePackageOnBuild for the packable port projects, and
+         inherited here that drives Pack over a non-packable app on every build - which warns. Turn it
+         back off: there is nothing to pack. (The test projects avoid this by using the plain SDK,
+         which does not set WarnOnPackingNonPackableProject.) -->
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\AspNetCore.Web.Hosting.Kestrel\AspNetCore.Web.Hosting.Kestrel.csproj" />
+    <!-- Do not remove: the DynamicData\ pages compile against System.Web.DynamicData. -->
+    <ProjectReference Include="..\..\AspNetCore.Web.DynamicData\AspNetCore.Web.DynamicData.csproj" />
+    <!-- Do not remove: LinqDataSource lives in Core.Web.Extensions. -->
+    <ProjectReference Include="..\..\AspNetCore.Web.Extensions\AspNetCore.Web.Extensions.csproj" />
+  </ItemGroup>
+
+  <Import Project="..\..\Build\WebFormsPort.targets" />
+
+  <Import Project="..\..\AspNetCore.Web.Hosting.Kestrel\build\Core.Web.Hosting.Kestrel.targets" />
+
+</Project>

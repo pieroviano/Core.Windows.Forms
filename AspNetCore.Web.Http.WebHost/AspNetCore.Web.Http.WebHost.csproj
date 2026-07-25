@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+    <Import Project="$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.props" Condition="Exists('$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.props')" />
+    <!--
+    Hosts Web API inside System.Web: the route handler, the HttpControllerHandler that adapts an
+    HttpRequestMessage onto HttpContext, and the buffer policy. This is the piece that makes
+    MapHttpRoute work in a Global.asax.
+  -->
+    <PropertyGroup>
+        <PackageOutputPath>$(SolutionDir)Packages/</PackageOutputPath>
+        <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+        <Version>$(VersionPrefix).$(VersionSuffix)</Version>
+        <TargetFramework>net10.0</TargetFramework>
+        <LangVersion>latest</LangVersion>
+        <Nullable>disable</Nullable>
+        <ImplicitUsings>disable</ImplicitUsings>
+        <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+        <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+        <NoWarn>$(NoWarn);612;618;436;1591;0108;0114;0067;0162;0169;0219;0414;0649;3021;SYSLIB0003;SYSLIB0011;SYSLIB0012;SYSLIB0021;SYSLIB0022;SYSLIB0023;CS8981</NoWarn>
+        <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+        <WarningLevel>0</WarningLevel>
+        <DebugType>portable</DebugType>
+        <AssemblyName>Core.Web.Http.WebHost</AssemblyName>
+        <RootNamespace>System.Web.Http.WebHost</RootNamespace>
+        <DefineConstants>$(DefineConstants);ASPNETMVC</DefineConstants>
+        <DefineConstants>$(DefineConstants);NET_4_0;NET_4_5;MONO;SYSTEM_WEB_PORT</DefineConstants>
+        <AspNetWebStackDir>$(MSBuildThisFileDirectory)..\Mono\external\aspnetwebstack\src\</AspNetWebStackDir>
+        <PackageId>AspNet$(AssemblyName)</PackageId>
+        <Description>Hosts ASP.NET Web API inside the ported System.Web pipeline, so .aspx pages and API controllers serve from one application.</Description>
+        <!-- Apache-2.0 for the aspnetwebstack sources this compiles, MIT for Mono's AssemblyInfo.cs and
+             this port's own code. See Directory.Build.props for why the expression must be explicit. -->
+        <PortLicenseExpression>Apache-2.0 AND MIT</PortLicenseExpression>
+    </PropertyGroup>
+    <ItemGroup>
+        <!-- Upstream declares these manifest names explicitly (Makefile RESOURCE_DEFS) and the
+         generated SRResources/Resources classes look them up at runtime. Every error message
+         comes through them - including the one HttpResponseException's own constructor reads,
+         which is why a missing name surfaces as a 500 from a controller that meant to say 404. -->
+        <EmbeddedResource Include="$(AspNetWebStackDir)Common\CommonWebApiResources.resx" LogicalName="System.Web.Http.WebHost.Properties.CommonWebApiResources.resources" />
+        <EmbeddedResource Include="$(AspNetWebStackDir)System.Web.Http.WebHost\Properties\SRResources.resx" LogicalName="System.Web.Http.WebHost.Properties.SRResources.resources" />
+    </ItemGroup>
+    <!-- Upstream sources, compiled in place. Regenerate with: Tools/gen-sources.ps1 -->
+    <Import Project="Sources.generated.props" />
+    <ItemGroup>
+        <Compile Include="Generated\**\*.cs" />
+        <Compile Include="Overrides\**\*.cs" />
+        <Compile Include="Port\**\*.cs" />
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Net4x.NuGetUtility" Version="$(NuGetUtilityVersion)" PrivateAssets="All" />
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\AspNetCore.Web\AspNetCore.Web.csproj" />
+        <!-- Do not remove: this assembly IS the System.Web host for Core.Web.Http, so every type it
+             compiles against (HttpConfiguration, IHttpRoute, HttpControllerDispatcher) comes from
+             there. Removing it fails the build with ~100 CS0246/CS0234 errors. -->
+        <ProjectReference Include="..\AspNetCore.Web.Http\AspNetCore.Web.Http.csproj" />
+        <ProjectReference Include="..\AspNetCore.Net.Http.Formatting\AspNetCore.Net.Http.Formatting.csproj" />
+        <ProjectReference Include="..\AspNetCore.Web.Infrastructure\AspNetCore.Web.Infrastructure.csproj" />
+    </ItemGroup>
+    <!-- Removes the empty .NET System.Web.dll facade; see the file for why this is not optional. -->
+    <PropertyGroup>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+    </PropertyGroup>
+    <ItemGroup>
+        <Content Include="README.md" Link="README.md" Pack="true" PackagePath="\README.md" />
+        <!-- Travels with the package: an SPDX expression says WHICH licences apply, not to which
+             files. See Directory.Build.props for why the expression is set explicitly. -->
+        <Content Include="$(MSBuildThisFileDirectory)..\THIRD-PARTY-NOTICES.md" Link="THIRD-PARTY-NOTICES.md" Pack="true" PackagePath="\THIRD-PARTY-NOTICES.md" />
+    </ItemGroup>
+    <Import Project="..\Build\WebFormsPort.targets" />
+    <Import Project="$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.targets" Condition="Exists('$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.targets')" />
+</Project>
