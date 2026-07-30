@@ -40,9 +40,9 @@ inventoried per assembly in [MONOTODO.md](MONOTODO.md), generated so it cannot d
 All of it is covered by 445 tests, against C# and VB applications, over HTTP and through a real browser.
 
 MVC is version **4**, Razor is **v2** and Web Pages is **2** — the generation the aspnetwebstack
-submodule carries, and now consistent across all three. (Earlier revisions of this document said
-"MVC 3, Razor v1". The MVC half was true until the compile list moved to the MVC 4 sources; the Razor
-half was simply wrong — Razor and Web Pages have always been built from aspnetwebstack here.)
+submodule carries, consistently across all three. If you find a reference anywhere to MVC 3 or Razor v1,
+it is wrong: the compile list is `Build/System.Web.Mvc4.sources`, and Razor and Web Pages are built from
+aspnetwebstack.
 
 What MVC 4 does not have, and this port does not add: view components, tag helpers, and MVC 5's
 filter overrides. Attribute routing, bundling and `@await` were all MVC 5-or-later features and are

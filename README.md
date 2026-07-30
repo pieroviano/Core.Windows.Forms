@@ -113,12 +113,13 @@ built and tested against it immediately; and only once the whole set is green do
 pushed. The alternative is publishing versions that turn out to be wrong and unlisting them afterwards.
 
 **What follows from it.** Two things, and neither is a defect — they are the cost of the arrangement,
-worth knowing because both have caused confusion:
+and both are easy to mistake for bugs:
 
-* **It accumulates, and nothing prunes it.** A package id outlives the project that produced it. When
-  `AspNetCore.Web.WebPages` was renamed to `AspNetCore.Web.WebPages.Base`, the old `.nupkg` stayed and
-  kept satisfying restores — so the port-tool build tests passed against an id no project emitted, and
-  would have failed on a clean machine. Run before a release:
+* **It accumulates, and nothing prunes it.** A package id outlives the project that produced it, so a
+  rename or a retirement leaves an artefact behind that still satisfies restores. Everything keeps
+  working here and fails on a machine that has never built this port — the failure whoever caused it
+  cannot reproduce. `Tests/AspNetCore.Web.PortTool.Tests` is the suite most exposed to it, since it
+  restores generated projects against this feed. Run before a release:
 
   ```powershell
   powershell -ExecutionPolicy Bypass -File Tools/prune-feed.ps1          # report

@@ -12,7 +12,9 @@
         <VersionBuildSuffix Condition="'$(Configuration)' == 'Release'">*</VersionBuildSuffix>
         <VersionBuildSuffix Condition="'$(VersionBuildSuffix)'==''">*</VersionBuildSuffix>
         <VersionBuildSuffix Condition="'$(VersionBuildSuffix)' == ''">*</VersionBuildSuffix>
-        <NuGetUtilityVersion Condition="'$(NuGetUtilityVersion)'==''">1.0.12</NuGetUtilityVersion>
+        <NuGetUtilityVersion Condition="'$(NuGetUtilityVersion)'==''">1.0.13</NuGetUtilityVersion>
+        <NuGetPackageRoot Condition="'$(NuGetPackageRoot)' == ''">$(USERPROFILE)\.nuget\packages\</NuGetPackageRoot>
+        <VersionBuildSuffix>*</VersionBuildSuffix>
         <AspNetCoreWebVersion>1.0.0</AspNetCoreWebVersion>
         <NuGetUtilityVersion>1.0.9</NuGetUtilityVersion>
         <ObfuscarVersion>2.2.37</ObfuscarVersion>
