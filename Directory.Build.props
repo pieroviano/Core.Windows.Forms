@@ -85,7 +85,8 @@
          an error that names neither the project nor the property. Both are conditional so a build
          server can pass its own - e.g. -p:VersionSuffix=$(BUILD_NUMBER). -->
 		<VersionPrefix Condition="'$(VersionPrefix)' == ''">1.0.0</VersionPrefix>
-		<VersionSuffix Condition="'$(VersionSuffix)' == ''">0</VersionSuffix>
+		<VersionSuffix>$([System.DateTime]::Now.ToString("yy"))$([System.DateTime]::Now.DayOfYear.ToString("000"))</VersionSuffix>
+		<MinimalDirectoryNuGetProps>true</MinimalDirectoryNuGetProps>
 	</PropertyGroup>
 
 	<PropertyGroup>
