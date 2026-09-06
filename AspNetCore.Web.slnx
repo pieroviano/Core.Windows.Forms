@@ -50,6 +50,7 @@
   <Project Path="AspNetCore.Web.WebPages/AspNetCore.Web.WebPages.csproj" />
   <Project Path="AspNetCore.Web.WebPages.Razor/AspNetCore.Web.WebPages.Razor.csproj" />
   <Project Path="AspNetCore.Web.Http.WebHost/AspNetCore.Web.Http.WebHost.csproj" />
+  <Project Path="AspNetCore.Configuration/AspNetCore.Configuration.csproj" />
   <Project Path="AspNetCore.Net.Http.Formatting/AspNetCore.Net.Http.Formatting.csproj" />
   <Project Path="AspNetCore.Web.Optimization/AspNetCore.Web.Optimization.csproj" />
   <Project Path="AspNetCore.Web.Razor/AspNetCore.Web.Razor.csproj" />

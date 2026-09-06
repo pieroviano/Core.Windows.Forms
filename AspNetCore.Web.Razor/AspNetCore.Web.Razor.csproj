@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
-    <Import Project="$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.props" Condition="Exists('$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.props')" />
     <PropertyGroup>
         <!-- Every port assembly is packable; only tests and samples are not. -->
         <PackageOutputPath>$(SolutionDir)Packages/</PackageOutputPath>
@@ -74,5 +73,4 @@
         <EmbeddedResource Include="$(AspNetWebStackDir)System.Web.Razor\Resources\RazorResources.resx" LogicalName="System.Web.Razor.Resources.RazorResources.resources" />
         <EmbeddedResource Include="$(AspNetWebStackDir)CommonResources.resx" LogicalName="System.Web.Razor.Common.CommonResources.resources" />
     </ItemGroup>
-    <Import Project="$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.targets" Condition="Exists('$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.targets')" />
 </Project>
