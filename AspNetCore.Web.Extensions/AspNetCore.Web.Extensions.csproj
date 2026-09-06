@@ -6,7 +6,7 @@
         <Version>$(VersionPrefix).$(VersionSuffix)</Version>
         <AssemblyName>Core.Web.Extensions</AssemblyName>
         <RootNamespace>System.Web</RootNamespace>
-        <TargetFramework>net10.0</TargetFramework>
+        <TargetFrameworks>net6.0;net8.0;net10.0</TargetFrameworks>
         <LangVersion>latest</LangVersion>
         <Nullable>disable</Nullable>
         <ImplicitUsings>disable</ImplicitUsings>

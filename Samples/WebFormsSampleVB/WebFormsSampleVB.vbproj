@@ -7,7 +7,7 @@
   <Import Project="..\..\AspNetCore.Web.Hosting.Kestrel\build\Core.Web.Hosting.Kestrel.props" />
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks>net10.0</TargetFrameworks>
     <LangVersion>latest</LangVersion>
     <OutputType>Exe</OutputType>
     <!-- Deliberately EMPTY. VB prepends RootNamespace to every declaration, so with the default

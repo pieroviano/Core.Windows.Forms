@@ -6,7 +6,7 @@
        configuration system and see web.config; if it does not, they see nothing (or fail to load).
        That makes it the only honest test of the facade. -->
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks>net10.0</TargetFrameworks>
     <LangVersion>latest</LangVersion>
     <AssemblyName>ThirdPartyProbe</AssemblyName>
     <Nullable>disable</Nullable>

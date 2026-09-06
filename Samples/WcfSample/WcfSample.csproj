@@ -13,7 +13,7 @@
     "**\*.svc" is in the package's default content globs, so nothing here has to say so.
   -->
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks>net10.0</TargetFrameworks>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
     <!-- Sample apps are not packages. The Web SDK already defaults IsPackable=false, but

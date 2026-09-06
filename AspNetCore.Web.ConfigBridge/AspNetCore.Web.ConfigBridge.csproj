@@ -4,7 +4,7 @@
         <PackageOutputPath>$(SolutionDir)Packages/</PackageOutputPath>
         <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
         <Version>$(VersionPrefix).$(VersionSuffix)</Version>
-        <TargetFramework>net10.0</TargetFramework>
+        <TargetFrameworks>net6.0;net8.0;net10.0</TargetFrameworks>
         <AssemblyName>Core.Web.ConfigBridge</AssemblyName>
         <RootNamespace>System.Web.Configuration.Bridge</RootNamespace>
         <Nullable>enable</Nullable>

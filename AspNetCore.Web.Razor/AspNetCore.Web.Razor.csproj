@@ -5,7 +5,7 @@
         <PackageOutputPath>$(SolutionDir)Packages/</PackageOutputPath>
         <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
         <Version>$(VersionPrefix).$(VersionSuffix)</Version>
-        <TargetFramework>net10.0</TargetFramework>
+        <TargetFrameworks>net6.0;net8.0;net10.0</TargetFrameworks>
         <!-- NOT named System.Web.Razor. Unlike System.Web there is no empty framework facade to collide
          with here, but the naming follows the rest of the port so that every ported assembly is
          recognisable as one and configuration retargeting has a single rule to apply.

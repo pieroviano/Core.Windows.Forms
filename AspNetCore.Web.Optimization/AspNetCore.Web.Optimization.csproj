@@ -20,7 +20,7 @@
          put in a .snupkg, and pack produces none without saying so. -->
         <DebugType>portable</DebugType>
         <Version>$(VersionPrefix).$(VersionSuffix)</Version>
-        <TargetFramework>net10.0</TargetFramework>
+        <TargetFrameworks>net6.0;net8.0;net10.0</TargetFrameworks>
         <AssemblyName>Core.Web.Optimization</AssemblyName>
         <RootNamespace>System.Web.Optimization</RootNamespace>
         <LangVersion>latest</LangVersion>

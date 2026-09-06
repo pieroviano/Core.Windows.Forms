@@ -28,7 +28,7 @@ namespace PortProject
 			text.AppendLine ("<Project Sdk=\"Microsoft.NET.Sdk.Web\">");
 			text.AppendLine ();
 			text.AppendLine ("  <PropertyGroup>");
-			text.AppendLine ("    <TargetFramework>net10.0</TargetFramework>");
+			text.AppendLine ("    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>");
 			text.AppendLine ("    <LangVersion>latest</LangVersion>");
 			text.AppendLine ("    <Nullable>disable</Nullable>");
 

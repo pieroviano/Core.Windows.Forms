@@ -45,6 +45,7 @@
   <Project Path="AspNetCore.Web.DynamicData/AspNetCore.Web.DynamicData.csproj" />
   <Project Path="AspNetCore.Web.Extensions/AspNetCore.Web.Extensions.csproj" />
   <Project Path="AspNetCore.Web.Hosting.Kestrel/AspNetCore.Web.Hosting.Kestrel.csproj" />
+  <Project Path="AspNetCore.Web.Http/AspNetCore.Web.Http.csproj" />
   <Project Path="AspNetCore.Web.Infrastructure/AspNetCore.Web.Infrastructure.csproj" />
   <Project Path="AspNetCore.Web.WebPages.Deployment/AspNetCore.Web.WebPages.Deployment.csproj" />
   <Project Path="AspNetCore.Web.WebPages/AspNetCore.Web.WebPages.csproj" />

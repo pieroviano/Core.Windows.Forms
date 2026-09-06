@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk.Web">
-    <Import Project="$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.props" Condition="Exists('$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.props')" />
     <PropertyGroup>
         <!-- Every port assembly is packable; only tests and samples are not. -->
         <PackageOutputPath>$(SolutionDir)Packages/</PackageOutputPath>
@@ -9,7 +8,7 @@
          ships the hosting API and the build/ props+targets, so it has to opt back in. -->
         <IsPackable>true</IsPackable>
         <Version>$(VersionPrefix).$(VersionSuffix)</Version>
-        <TargetFramework>net10.0</TargetFramework>
+        <TargetFrameworks>net6.0;net8.0;net10.0</TargetFrameworks>
         <AssemblyName>Core.Web.Hosting.Kestrel</AssemblyName>
         <RootNamespace>System.Web.Hosting.Kestrel</RootNamespace>
         <OutputType>Library</OutputType>
@@ -73,5 +72,4 @@
         <Content Include="$(MSBuildThisFileDirectory)..\THIRD-PARTY-NOTICES.md" Link="THIRD-PARTY-NOTICES.md" Pack="true" PackagePath="\THIRD-PARTY-NOTICES.md" />
     </ItemGroup>
     <Import Project="..\build\WebFormsPort.targets" />
-    <Import Project="$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.targets" Condition="Exists('$(NuGetPackageRoot)net4x.nugetutility/$(NuGetUtilityVersion)/build/NuGet.Utility.targets')" />
 </Project>

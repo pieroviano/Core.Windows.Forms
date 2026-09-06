@@ -10,7 +10,7 @@
         <PackageOutputPath>$(SolutionDir)Packages/</PackageOutputPath>
         <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
         <Version>$(VersionPrefix).$(VersionSuffix)</Version>
-        <TargetFramework>net10.0</TargetFramework>
+        <TargetFrameworks>net6.0;net8.0;net10.0</TargetFrameworks>
         <AssemblyName>Core.Web.WebPages.Deployment</AssemblyName>
         <RootNamespace>System.Web.WebPages.Deployment</RootNamespace>
         <LangVersion>latest</LangVersion>
