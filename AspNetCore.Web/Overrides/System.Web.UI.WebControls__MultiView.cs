@@ -55,6 +55,10 @@ using System.Web;
 using System.Web.UI;
 using System.ComponentModel;
 
+// CS0436: Core.Configuration compiles Mono's Consts too, and exposes it to this assembly as a friend.
+// Both copies come from the same Consts.cs.in, so which one binds makes no difference.
+#pragma warning disable 0436
+
 namespace System.Web.UI.WebControls
 {
 	[ControlBuilder (typeof(MultiViewControlBuilder))]
