@@ -45,13 +45,17 @@
   <Project Path="AspNetCore.Web.DynamicData/AspNetCore.Web.DynamicData.csproj" />
   <Project Path="AspNetCore.Web.Extensions/AspNetCore.Web.Extensions.csproj" />
   <Project Path="AspNetCore.Web.Hosting.Kestrel/AspNetCore.Web.Hosting.Kestrel.csproj" />
-  <Project Path="AspNetCore.Web.Http/AspNetCore.Web.Http.csproj" />
+  <Project Path="AspNetCore.Web.Http/AspNetCore.Web.Http.csproj">
+    <Build Solution="Release|*" Project="false" />
+  </Project>
   <Project Path="AspNetCore.Web.Infrastructure/AspNetCore.Web.Infrastructure.csproj" />
   <Project Path="AspNetCore.Web.WebPages.Deployment/AspNetCore.Web.WebPages.Deployment.csproj" />
   <Project Path="AspNetCore.Web.WebPages/AspNetCore.Web.WebPages.csproj" />
   <Project Path="AspNetCore.Web.WebPages.Razor/AspNetCore.Web.WebPages.Razor.csproj" />
   <Project Path="AspNetCore.Web.Http.WebHost/AspNetCore.Web.Http.WebHost.csproj" />
-  <Project Path="AspNetCore.Configuration/AspNetCore.Configuration.csproj" />
+  <Project Path="AspNetCore.Configuration/AspNetCore.Configuration.csproj">
+    <Build Solution="Release|*" Project="false" />
+  </Project>
   <Project Path="AspNetCore.Net.Http.Formatting/AspNetCore.Net.Http.Formatting.csproj" />
   <Project Path="AspNetCore.Web.Optimization/AspNetCore.Web.Optimization.csproj" />
   <Project Path="AspNetCore.Web.Razor/AspNetCore.Web.Razor.csproj" />
