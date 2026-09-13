@@ -469,3 +469,31 @@ System.Web.UI/Page.cs	\(string \[\]\) _requiresPostBackCopy\.ToArray \(\);	(stri
 #
 #     On ONE line with the field it exposes, because the rule has to preserve the line count.
 System.Web/HttpResponse.cs	bool headers_sent;	bool headers_sent; public bool HeadersWritten { get { return headers_sent; } }
+
+# --- ClientIDMode.Predictable to ASP.NET 4's algorithm: see Port/Control.PredictableClientID.cs.
+#     Upstream stopped the prefix chain only at the Page (not the MasterPage) and let data item
+#     containers contribute their automatic ids - "ctl00_MainContent_x", "rep_ctl03_pick_3" where
+#     ASP.NET renders "MainContent_x", "rep_pick_3".
+System.Web.UI/Control.cs	return GeneratePredictableClientID \(\);	return GeneratePredictableClientIDPort ();
+
+# --- Wizard hosts its steps in a MultiView and navigates itself; ASP.NET's Wizard stops that
+#     MultiView from handling NextView/PrevView/SwitchView* commands bubbled out of a step. The
+#     MultiView override (Overrides/System.Web.UI.WebControls__MultiView.cs) supplies the switch.
+System.Web.UI.WebControls/Wizard.cs	multiView = new MultiView \(\);	multiView = new MultiView (); multiView.IgnoreBubbleEvents ();
+
+# --- PageIndexChanged for a manually bound GridView / DetailsView / FormView. Upstream returned
+#     straight after PageIndexChanging unless a DataSourceID did the binding, so a page that pages its
+#     own data never saw PageIndexChanged. ASP.NET (GridView/DetailsView/FormView.HandlePage) raises it
+#     either way; only the index bookkeeping is reserved for a data source control - except FormView,
+#     which moves its page index in both modes.
+System.Web.UI.WebControls/GridView.cs	if \(args\.Cancel \|\| !IsBoundUsingDataSourceID\)(\s+return;\s+)EndRowEdit \(\);(\s+)PageIndex = args\.NewPageIndex;	if (args.Cancel)$1if (IsBoundUsingDataSourceID) { EndRowEdit ();$2PageIndex = args.NewPageIndex; }
+System.Web.UI.WebControls/DetailsView.cs	if \(args\.Cancel \|\| !IsBoundUsingDataSourceID\)(\s+return;\s+)if \(args\.NewPageIndex < 0 \|\| args\.NewPageIndex >= PageCount\)(\s+return;\s+)EndRowEdit \(false\);(\s+)PageIndex = args\.NewPageIndex;	if (args.Cancel)$1if (IsBoundUsingDataSourceID && (args.NewPageIndex < 0 || args.NewPageIndex >= PageCount))$2if (IsBoundUsingDataSourceID) { EndRowEdit (false);$3PageIndex = args.NewPageIndex; }
+System.Web.UI.WebControls/FormView.cs	if \(args\.Cancel \|\| !IsBoundUsingDataSourceID\)(\s+return;\s+int newIndex = args\.NewPageIndex;)	if (args.Cancel)$1
+
+# --- Unbuffered writes overtook buffered ones. With BufferOutput turned off part-way through a
+#     response, HttpResponseStream.Write/WritePtr sent each write straight to the worker request while
+#     anything written BEFORE the switch - a page's leading literal markup, typically - stayed in the
+#     buckets until the next Flush, and arrived after the first unbuffered chunk. ASP.NET's HttpWriter
+#     keeps one ordered buffer and flushes it after every write when buffering is off, so the bytes
+#     leave in the order they were written. Drain the buckets before the direct write.
+System.Web/HttpResponseStream.cs	response\.WriteHeaders \(false\);	response.WriteHeaders (false); if (total > 0) Flush (response.WorkerRequest, false);

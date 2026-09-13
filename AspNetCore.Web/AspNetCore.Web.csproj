@@ -86,6 +86,14 @@
         <EmbeddedResource Include="$(MonoSystemWebDir)resources\*.gif" LogicalName="%(Filename)%(Extension)" />
         <EmbeddedResource Include="$(MonoSystemWebDir)resources\*.html" LogicalName="%(Filename)%(Extension)" />
         <EmbeddedResource Include="$(MonoSystemWebDir)System.Web.UI.WebControls\MenuModern.js" LogicalName="MenuModern.js" />
+        <!-- The controls' own client scripts, embedded exactly as upstream's Makefile does
+             (RESOURCE_FILES_2). Missing, a TreeView renders onmouseover="TreeView_HoverNode(...)" and
+             an expand link calling TreeView_ToggleExpand, both against a WebResource.axd URL that
+             404s - every hover throws a ReferenceError and nodes cannot be expanded or collapsed. -->
+        <EmbeddedResource Include="$(MonoSystemWebDir)System.Web.UI.WebControls\TreeView.js" LogicalName="TreeView.js" />
+        <EmbeddedResource Include="$(MonoSystemWebDir)System.Web.UI.WebControls\Menu.js" LogicalName="Menu.js" />
+        <EmbeddedResource Include="$(MonoSystemWebDir)System.Web.UI.WebControls\GridView.js" LogicalName="GridView.js" />
+        <EmbeddedResource Include="$(MonoSystemWebDir)System.Web.UI.WebControls\DetailsView.js" LogicalName="DetailsView.js" />
         <EmbeddedResource Include="$(MonoSystemWebDir)resources\TranslationResources.resx" LogicalName="TranslationResources.resources" />
     </ItemGroup>
     <!-- Removes the empty .NET System.Web.dll facade; see the file for why this is not optional. -->

@@ -331,7 +331,7 @@
     <Compile Include="patched\System.Web__HttpRequest.cs" />
     <Compile Include="..\Mono\mcs\class\System.Web\System.Web\HttpRequestValidationException.cs" />
     <Compile Include="..\Mono\mcs\class\System.Web\System.Web\HttpResponseHeader.cs" />
-    <Compile Include="..\Mono\mcs\class\System.Web\System.Web\HttpResponseStream.cs" />
+    <Compile Include="patched\System.Web__HttpResponseStream.cs" />
     <Compile Include="..\Mono\mcs\class\System.Web\System.Web\HttpResponseSubstitutionCallback.cs" />
     <Compile Include="patched\System.Web__HttpResponse.cs" />
     <Compile Include="patched\System.Web__HttpRuntime.cs" />
@@ -517,7 +517,7 @@
     <Compile Include="..\Mono\mcs\class\System.Web\System.Web.UI\ControlBuilder.cs" />
     <Compile Include="..\Mono\mcs\class\System.Web\System.Web.UI\ControlCachePolicy.cs" />
     <Compile Include="..\Mono\mcs\class\System.Web\System.Web.UI\ControlCollection.cs" />
-    <Compile Include="..\Mono\mcs\class\System.Web\System.Web.UI\Control.cs" />
+    <Compile Include="patched\System.Web.UI__Control.cs" />
     <Compile Include="..\Mono\mcs\class\System.Web\System.Web.UI\ControlSkin.cs" />
     <Compile Include="..\Mono\mcs\class\System.Web\System.Web.UI\ControlSkinDelegate.cs" />
     <Compile Include="..\Mono\mcs\class\System.Web\System.Web.UI\ControlValuePropertyAttribute.cs" />
@@ -826,7 +826,7 @@
     <Compile Include="..\Mono\mcs\class\referencesource\System.Web\UI\WebControls\DayRenderEventHandler.cs" />
     <Compile Include="..\Mono\mcs\class\referencesource\System.Web\UI\WebControls\DetailsViewCommandEventArgs.cs" />
     <Compile Include="..\Mono\mcs\class\referencesource\System.Web\UI\WebControls\DetailsViewCommandEventHandler.cs" />
-    <Compile Include="..\Mono\mcs\class\System.Web\System.Web.UI.WebControls\DetailsView.cs" />
+    <Compile Include="patched\System.Web.UI.WebControls__DetailsView.cs" />
     <Compile Include="..\Mono\mcs\class\System.Web\System.Web.UI.WebControls\DetailsViewDeletedEventArgs.cs" />
     <Compile Include="..\Mono\mcs\class\referencesource\System.Web\UI\WebControls\DetailsViewDeletedEventHandler.cs" />
     <Compile Include="..\Mono\mcs\class\System.Web\System.Web.UI.WebControls\DetailsViewDeleteEventArgs.cs" />
@@ -861,7 +861,7 @@
     <Compile Include="..\Mono\mcs\class\System.Web\System.Web.UI.WebControls\FormParameter.cs" />
     <Compile Include="..\Mono\mcs\class\System.Web\System.Web.UI.WebControls\FormViewCommandEventArgs.cs" />
     <Compile Include="..\Mono\mcs\class\referencesource\System.Web\UI\WebControls\FormViewCommandEventHandler.cs" />
-    <Compile Include="..\Mono\mcs\class\System.Web\System.Web.UI.WebControls\FormView.cs" />
+    <Compile Include="patched\System.Web.UI.WebControls__FormView.cs" />
     <Compile Include="..\Mono\mcs\class\System.Web\System.Web.UI.WebControls\FormViewDeletedEventArgs.cs" />
     <Compile Include="..\Mono\mcs\class\referencesource\System.Web\UI\WebControls\FormViewDeletedEventHandler.cs" />
     <Compile Include="..\Mono\mcs\class\System.Web\System.Web.UI.WebControls\FormViewDeleteEventArgs.cs" />
@@ -886,7 +886,7 @@
     <Compile Include="..\Mono\mcs\class\referencesource\System.Web\UI\WebControls\GridViewCancelEditEventHandler.cs" />
     <Compile Include="..\Mono\mcs\class\referencesource\System.Web\UI\WebControls\GridViewCommandEventArgs.cs" />
     <Compile Include="..\Mono\mcs\class\referencesource\System.Web\UI\WebControls\GridViewCommandEventHandler.cs" />
-    <Compile Include="..\Mono\mcs\class\System.Web\System.Web.UI.WebControls\GridView.cs" />
+    <Compile Include="patched\System.Web.UI.WebControls__GridView.cs" />
     <Compile Include="..\Mono\mcs\class\System.Web\System.Web.UI.WebControls\GridViewDeletedEventArgs.cs" />
     <Compile Include="..\Mono\mcs\class\referencesource\System.Web\UI\WebControls\GridViewDeletedEventHandler.cs" />
     <Compile Include="..\Mono\mcs\class\System.Web\System.Web.UI.WebControls\GridViewDeleteEventArgs.cs" />
@@ -972,7 +972,6 @@
     <Compile Include="..\Mono\mcs\class\System.Web\System.Web.UI.WebControls\MenuTableRenderer.cs" />
     <Compile Include="..\Mono\mcs\class\referencesource\System.Web\UI\WebControls\MonthChangedEventArgs.cs" />
     <Compile Include="..\Mono\mcs\class\referencesource\System.Web\UI\WebControls\MonthChangedEventHandler.cs" />
-    <Compile Include="..\Mono\mcs\class\System.Web\System.Web.UI.WebControls\MultiView.cs" />
     <Compile Include="..\Mono\mcs\class\System.Web\System.Web.UI.WebControls\MultiViewControlBuilder.cs" />
     <Compile Include="..\Mono\mcs\class\referencesource\System.Web\UI\WebControls\NextPrevFormat.cs" />
     <Compile Include="..\Mono\mcs\class\System.Web\System.Web.UI.WebControls\ObjectDataSource.cs" />
@@ -1152,7 +1151,7 @@
     <Compile Include="..\Mono\mcs\class\System.Web\System.Web.UI.WebControls.WebParts\WebPartVerb.cs" />
     <Compile Include="..\Mono\mcs\class\referencesource\System.Web\UI\WebParts\WebPartVerbsEventArgs.cs" />
     <Compile Include="..\Mono\mcs\class\referencesource\System.Web\UI\WebParts\WebPartVerbsEventHandler.cs" />
-    <Compile Include="..\Mono\mcs\class\System.Web\System.Web.UI.WebControls\Wizard.cs" />
+    <Compile Include="patched\System.Web.UI.WebControls__Wizard.cs" />
     <Compile Include="..\Mono\mcs\class\System.Web\System.Web.UI.WebControls\WizardNavigationEventArgs.cs" />
     <Compile Include="..\Mono\mcs\class\System.Web\System.Web.UI.WebControls\WizardNavigationEventHandler.cs" />
     <Compile Include="..\Mono\mcs\class\System.Web\System.Web.UI.WebControls\WizardStepBase.cs" />
