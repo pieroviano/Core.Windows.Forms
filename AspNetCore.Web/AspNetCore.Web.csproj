@@ -24,7 +24,7 @@
         <DefineConstants>$(DefineConstants);NET_1_1;NET_2_0;NET_3_5;NET_4_0;NET_4_5</DefineConstants>
         <DefineConstants>$(DefineConstants);SYSTEM_WEB_PORT</DefineConstants>
         <DefineConstants>$(DefineConstants);MONO;FEATURE_PAL</DefineConstants>
-        <PackageId>AspNet$(AssemblyName).Base</PackageId>
+        <PackageId>Net4x.AspNet$(AssemblyName).Base</PackageId>
         <Description>System.Web for .NET 10 - WebForms pages, server controls, view state, session, caching, membership and output caching, ported from Mono and hosted under Kestrel. The assembly is Core.Web; namespaces are unchanged.</Description>
     </PropertyGroup>
     <ItemGroup>

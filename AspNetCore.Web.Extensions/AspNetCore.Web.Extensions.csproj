@@ -22,7 +22,7 @@
         <MonoExtensionsDir>$(MSBuildThisFileDirectory)..\mono\mcs\class\System.Web.Extensions\</MonoExtensionsDir>
         <DefineConstants>$(DefineConstants);NET_1_1;NET_2_0;NET_3_5;NET_4_0;NET_4_5;SYSTEM_WEB_PORT;MONO</DefineConstants>
         <DefineConstants>$(DefineConstants);SYSTEM_WEB_EXTENSIONS</DefineConstants>
-        <PackageId>AspNet$(AssemblyName)</PackageId>
+        <PackageId>Net4x.AspNet$(AssemblyName)</PackageId>
         <Description>System.Web.Extensions on .NET 10 - ScriptManager, UpdatePanel, partial rendering, page methods, and a LinqDataSource rewritten against IQueryable.</Description>
     </PropertyGroup>
     <ItemGroup>

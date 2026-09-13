@@ -26,7 +26,7 @@
         <AspNetWebStackDir>$(MSBuildThisFileDirectory)..\Mono\external\aspnetwebstack\src\</AspNetWebStackDir>
         <DefineConstants>$(DefineConstants);ASPNETWEBPAGES</DefineConstants>
         <DefineConstants>$(DefineConstants);NET_4_0;NET_4_5;MONO;SYSTEM_WEB_PORT</DefineConstants>
-        <PackageId>AspNet$(AssemblyName)</PackageId>
+        <PackageId>Net4x.AspNet$(AssemblyName)</PackageId>
         <Description>The Razor parser and code generator on .NET 10 - the compiler front end for .cshtml. Add AspNetCore.Web.WebPages.Base to render them.</Description>
         <!-- Apache-2.0 for the aspnetwebstack sources this compiles, MIT for Mono's AssemblyInfo.cs and
              this port's own code. See Directory.Build.props for why the expression must be explicit. -->
