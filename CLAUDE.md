@@ -165,6 +165,7 @@ Each project runs in its own process because the runtime hosts one application p
 | `LegacyStacks.Tests` | System.Web.Mail over SMTP, object-graph serializer, LinqDataSource/Dynamic Data on IQueryable | no app |
 | `LegacyStacks.HttpTests` | Dynamic Data + `LinqDataSource` via `GridView` over HTTP | `Samples/DynamicDataSample` |
 | `PortTool.Tests` | `Tools/port-project` on legacy fixtures, incl. real `dotnet build` of output | needs `Packages/` populated |
+| `Samples.BrowserTests` | Headed Playwright over **all 8 samples**; WebForms events page by page (`Samples/WebFormsSample/Events/`) against reference-source semantics | launches each sample's built exe as a child process; `WEBFORMS_HEADLESS=1`, `WEBFORMS_SLOWMO=ms` |
 
 (All prefixed `AspNetCore.Web.` except `AspNetCore.Configuration.Tests`.)
 
@@ -175,7 +176,9 @@ Each project runs in its own process because the runtime hosts one application p
 - Apps are served from their **source** directories. Suites set `options.ApplicationAssemblies` when the app
   isn't the entry assembly, and their own `options.TemporaryFilesPath` (default is keyed on app path →
   parallel suites would corrupt generated pages).
-- Test projects import `Build/WebFormsPort.targets`.
+- Test projects that reference `Core.Web` import `Build/WebFormsPort.targets`.
+- Expected WebForms behaviour comes from Microsoft's reference source at
+  `mono/mcs/class/referencesource/System.Web` — check it before encoding an expectation or fixing a divergence.
 
 ## Shared staging feed (`Packages/`)
 

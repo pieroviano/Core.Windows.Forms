@@ -1,0 +1,58 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Exploratory browser tests over EVERY sample application: a real, visible Chromium driven by
+    Playwright against each sample running as its own process.
+
+    Out of process, unlike every other suite here. The ported runtime hosts one application per process,
+    so the in-process suites need one test project per sample; this one launches the samples' own
+    executables instead - the same binaries `dotnet run` starts - and can therefore cover all eight from
+    one project. It also means nothing in this assembly references Core.Web, so there is no framework
+    facade to strip and Build/WebFormsPort.targets is not imported.
+
+    The samples are ProjectReferences with ReferenceOutputAssembly="false": that orders the build (the
+    executables exist before a test starts) without copying any of their assemblies in here.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>WebFormsPort.SamplesBrowserTests</RootNamespace>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <IsPackable>false</IsPackable>
+    <EnableDefaultContentItems>false</EnableDefaultContentItems>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="Microsoft.Playwright" Version="1.61.0" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <SampleProject Include="..\..\Samples\WebFormsSample\WebFormsSample.csproj" />
+    <SampleProject Include="..\..\Samples\WebFormsSampleVB\WebFormsSampleVB.vbproj" />
+    <SampleProject Include="..\..\Samples\MvcSample\MvcSample.csproj" />
+    <SampleProject Include="..\..\Samples\WebPagesSample\WebPagesSample.csproj" />
+    <SampleProject Include="..\..\Samples\WebApiSample\WebApiSample.csproj" />
+    <SampleProject Include="..\..\Samples\WcfSample\WcfSample.csproj" />
+    <SampleProject Include="..\..\Samples\SessionStateSample\SessionStateSample.csproj" />
+    <SampleProject Include="..\..\Samples\DynamicDataSample\DynamicDataSample.csproj" />
+
+    <ProjectReference Include="@(SampleProject)" ReferenceOutputAssembly="false" Private="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Which build of the samples to launch: the one produced alongside this assembly. -->
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>SampleConfiguration</_Parameter1>
+      <_Parameter2>$(Configuration)</_Parameter2>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\AspNetCore.Web.FunctionalTests\Infrastructure\RepoPaths.cs" Link="Infrastructure\RepoPaths.cs" />
+  </ItemGroup>
+
+</Project>

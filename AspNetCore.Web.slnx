@@ -1,4 +1,11 @@
 <Solution>
+  <Folder Name="/Docs/">
+    <File Path="README.md" />
+    <File Path="Articles/running-aspnet-webforms-on-net10-with-kestrel.md" />
+    <File Path="LIMITATIONS.md" />
+    <File Path="PORTING-GUIDE.md" />
+    <File Path="REVIEW.md" />
+  </Folder>
   <Folder Name="/Samples/">
     <Project Path="Samples/MvcSample/MvcSample.csproj" />
     <Project Path="Samples/WebPagesSample/WebPagesSample.csproj" />
@@ -10,17 +17,13 @@
     <Project Path="Samples/WebFormsSampleVB/WebFormsSampleVB.vbproj" />
   </Folder>
   <Folder Name="/Solution Items/">
-    <File Path="README.md" />
-    <File Path="Articles/running-aspnet-webforms-on-net10-with-kestrel.md" />
     <File Path="Directory.Build.props" />
     <File Path="Directory.Nuget.Props" />
-    <File Path="LIMITATIONS.md" />
     <File Path="Nuget.Config" />
-    <File Path="PORTING-GUIDE.md" />
-    <File Path="REVIEW.md" />
   </Folder>
   <Folder Name="/Tests/">
     <Project Path="Tests/AspNetCore.Web.BrowserTests/AspNetCore.Web.BrowserTests.csproj" />
+    <Project Path="Tests/AspNetCore.Web.Samples.BrowserTests/AspNetCore.Web.Samples.BrowserTests.csproj" />
     <Project Path="Tests/AspNetCore.Configuration.Tests/AspNetCore.Configuration.Tests.csproj" />
     <Project Path="Tests/AspNetCore.Web.ConfigBridge.Tests/AspNetCore.Web.ConfigBridge.Tests.csproj" />
     <Project Path="Tests/AspNetCore.Web.FunctionalTests/AspNetCore.Web.FunctionalTests.csproj" />
