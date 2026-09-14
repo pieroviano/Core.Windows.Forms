@@ -515,7 +515,7 @@ namespace System.Web
 			//
 			// TODO: call ReleaseResources
 			//
-			domainUnloading = true;
+			domainUnloading = true; System.Web.Hosting.PortApplicationLifetime.OnUnloadRequested ();
 			HttpApplicationFactory.DisableWatchers ();
 			ThreadPool.QueueUserWorkItem (delegate {
 				try {

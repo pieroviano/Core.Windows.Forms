@@ -2,8 +2,10 @@
 // The seam between SessionStateModule and these stores.
 //
 // Core.Web must not reference Core.Web.SessionState - that would put Microsoft.Data.SqlClient in front
-// of every application whether it uses session state or not - so the patched SessionStateModule names
-// the stores as assembly-qualified STRINGS and the provider model loads them at runtime.
+// of every application whether it uses session state or not - so Core.Web names the stores as
+// assembly-qualified STRINGS and the provider model loads them at runtime: SQLServer's in the patched
+// SessionStateModule, StateServer's default in Port/PortSessionState.cs (a host can swap it, which is
+// why it is not a literal in the module).
 //
 // Nothing else checks that those strings are right. A namespace change, a class rename or an
 // AssemblyName change compiles perfectly on both sides and fails on the first request that touches
@@ -24,15 +26,21 @@ namespace WebFormsPort.SessionStateTests
 		const string PatchedModule =
 			@"AspNetCore.Web\patched\System.Web.SessionState_2.0__SessionStateModule.cs";
 
+		const string StateServerSeam = @"AspNetCore.Web\Port\PortSessionState.cs";
+
+		static string CoreWebSources ()
+			=> File.ReadAllText (Path.Combine (RepoPaths.Root, PatchedModule)) +
+			   File.ReadAllText (Path.Combine (RepoPaths.Root, StateServerSeam));
+
 		[Fact]
 		public void Every_store_the_patched_module_names_can_actually_be_loaded ()
 		{
-			string source = File.ReadAllText (Path.Combine (RepoPaths.Root, PatchedModule));
+			string source = CoreWebSources ();
 
-			// The two ProviderSettings lines the port's patch rules rewrote, e.g.
-			//   new ProviderSettings (null, "System.Web.SessionState.SqlSessionStateStore, Core.Web.SessionState")
+			// Every assembly-qualified name Core.Web gives the provider model for these stores, e.g.
+			//   "System.Web.SessionState.SqlSessionStateStore, Core.Web.SessionState"
 			MatchCollection matches = Regex.Matches (
-				source, @"new ProviderSettings \(null, ""(?<type>[^""]+, Core\.Web\.SessionState)""\)");
+				source, @"""(?<type>[^""]+, Core\.Web\.SessionState)""");
 
 			Assert.Equal (2, matches.Count);
 
@@ -57,15 +65,17 @@ namespace WebFormsPort.SessionStateTests
 		[Fact]
 		public void Both_modes_are_covered_and_they_are_different_stores ()
 		{
-			string source = File.ReadAllText (Path.Combine (RepoPaths.Root, PatchedModule));
+			string module = File.ReadAllText (Path.Combine (RepoPaths.Root, PatchedModule));
+			string source = CoreWebSources ();
 
 			Assert.Contains ("System.Web.SessionState.DistributedCacheSessionStateStore, Core.Web.SessionState",
 					 source);
+			Assert.Contains ("new ProviderSettings (null, PortSessionState.StateServerProviderType)", module);
 			Assert.Contains ("System.Web.SessionState.SqlSessionStateStore, Core.Web.SessionState", source);
 
 			// InProc keeps Mono's own handler - it needs no substitution and should not have been
 			// caught by the patch rules.
-			Assert.Contains ("typeof (SessionInProcHandler)", source);
+			Assert.Contains ("typeof (SessionInProcHandler)", module);
 		}
 	}
 }

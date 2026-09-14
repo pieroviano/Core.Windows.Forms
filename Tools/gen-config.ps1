@@ -73,6 +73,12 @@ function Retarget-PortAssembly([string]$text) {
     $text = [regex]::Replace($text, '(type="[^"]*?),\s*System\.Web\.Extensions(")', '${1}, Core.Web.Extensions$2')
     $text = [regex]::Replace($text, '(assembly=")System\.Web\.Extensions(")', '${1}Core.Web.Extensions$2')
 
+    # *.rem / *.soap: the remoting handler factory is Core.Web.Remoting's, hooked into
+    # Net4x.Runtime.Remoting's http channel. Only the handler type moves - the rest of
+    # System.Runtime.Remoting (channels, formatters) is not a port assembly and stays unresolved, which
+    # is harmless because nothing reads machine.config's <system.runtime.remoting> templates.
+    $text = [regex]::Replace($text, '(type="System\.Runtime\.Remoting\.Channels\.Http\.HttpRemotingHandlerFactory),\s*System\.Runtime\.Remoting(")', '${1}, Core.Web.Remoting$2')
+
     # System.Web.Services is ported as Core.Web.Services (the .asmx/SOAP serving stack).
     $text = [regex]::Replace($text, '(type="[^"]*?),\s*System\.Web\.Services(")', '${1}, Core.Web.Services$2')
     $text = [regex]::Replace($text, '(assembly=")System\.Web\.Services(")', '${1}Core.Web.Services$2')
@@ -120,7 +126,7 @@ $missingAssemblies = @(
     'System.ServiceModel.Web'
     'System.ServiceModel.Activation'
     'System.ServiceModel.Discovery'
-    'System.Runtime.Remoting'             # *.rem / *.soap handlers
+    'System.Runtime.Remoting'             # the handler factory is retargeted above; nothing else is shipped
     'System.IdentityModel'
     'System.Xaml'
     'System.Xaml.Hosting'

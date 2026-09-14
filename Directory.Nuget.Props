@@ -10,6 +10,9 @@
         <VersionBuildSuffix Condition="'$(VersionBuildSuffix)'==''">*</VersionBuildSuffix>
         <VersionBuildSuffix>*</VersionBuildSuffix>
         <AspNetCoreWebVersion>1.0.0</AspNetCoreWebVersion>
+        <CoreAppDomainVersion>2.0.0</CoreAppDomainVersion>
+        <!-- Net4x.Runtime.Remoting repository, consumed by AspNetCore.Web.Remoting from the shared feed. -->
+        <CoreRuntimeRemotingVersion>2.0.0</CoreRuntimeRemotingVersion>
         <NuGetUtilityVersion>1.0.14</NuGetUtilityVersion>
         <ObfuscarVersion>2.2.37</ObfuscarVersion>
     </PropertyGroup>

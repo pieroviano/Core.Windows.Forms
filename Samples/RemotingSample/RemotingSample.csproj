@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <!-- Imported by hand because a ProjectReference carries no build/ assets; see SessionStateSample. -->
+  <Import Project="..\..\AspNetCore.Web.Hosting.Kestrel\build\Core.AspNet.Web.Hosting.Kestrel.props" />
+
+  <!--
+    A WebForms application using what stood on .NET Remoting:
+
+      Calculator.rem      a well-known object published by web.config's <system.runtime.remoting>
+      Counter             a client-activated type, activated through the same *.rem endpoint
+      Session.aspx        mode="StateServer" against a remote state server (Tools/state-server)
+      ApplicationProbe    a host object for ApplicationHost.CreateApplicationHost / ApplicationManager
+  -->
+  <PropertyGroup>
+    <TargetFrameworks>net10.0</TargetFrameworks>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <!-- Not a package; see SessionStateSample for why this is turned back off. -->
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <NoWarn>$(NoWarn);CS8002;SYSLIB0010;CS0672</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\AspNetCore.Web.Hosting.Kestrel\AspNetCore.Web.Hosting.Kestrel.csproj" />
+    <ProjectReference Include="..\..\AspNetCore.Web.Remoting\AspNetCore.Web.Remoting.csproj" />
+  </ItemGroup>
+
+  <Import Project="..\..\Build\WebFormsPort.targets" />
+
+  <Import Project="..\..\AspNetCore.Web.Hosting.Kestrel\build\Core.AspNet.Web.Hosting.Kestrel.targets" />
+
+</Project>

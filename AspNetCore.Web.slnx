@@ -15,6 +15,7 @@
     <Project Path="Samples/DynamicDataSample/DynamicDataSample.csproj" />
     <Project Path="Samples/WebFormsSample/WebFormsSample.csproj" />
     <Project Path="Samples/WebFormsSampleVB/WebFormsSampleVB.vbproj" />
+    <Project Path="Samples/RemotingSample/RemotingSample.csproj" />
   </Folder>
   <Folder Name="/Solution Items/">
     <File Path="Directory.Build.props" />
@@ -38,11 +39,13 @@
     <Project Path="Tests/AspNetCore.Web.Razor.Tests/AspNetCore.Web.Razor.Tests.csproj" />
     <Project Path="Tests/AspNetCore.Web.ServiceModel.Tests/AspNetCore.Web.ServiceModel.Tests.csproj" />
     <Project Path="Tests/AspNetCore.Web.SessionState.Tests/AspNetCore.Web.SessionState.Tests.csproj" />
+    <Project Path="Tests/AspNetCore.Web.Remoting.Tests/AspNetCore.Web.Remoting.Tests.csproj" />
   </Folder>
   <Folder Name="/Tools/">
     <Project Path="Tools/thirdparty-probe/thirdparty-probe.csproj" />
     <Project Path="Tools/port-project/port-project.csproj" />
     <Project Path="Tools/verify-config/verify-config.csproj" />
+    <Project Path="Tools/state-server/state-server.csproj" />
   </Folder>
   <Project Path="AspNetCore.Web.ConfigBridge/AspNetCore.Web.ConfigBridge.csproj" />
   <Project Path="AspNetCore.Web.DynamicData/AspNetCore.Web.DynamicData.csproj" />
@@ -53,6 +56,7 @@
   </Project>
   <Project Path="AspNetCore.Web.Infrastructure/AspNetCore.Web.Infrastructure.csproj" />
   <Project Path="AspNetCore.Web.SessionState/AspNetCore.Web.SessionState.csproj" />
+  <Project Path="AspNetCore.Web.Remoting/AspNetCore.Web.Remoting.csproj" />
   <Project Path="AspNetCore.Web.WebPages.Deployment/AspNetCore.Web.WebPages.Deployment.csproj" />
   <Project Path="AspNetCore.Web.WebPages/AspNetCore.Web.WebPages.csproj" />
   <Project Path="AspNetCore.Web.WebPages.Razor/AspNetCore.Web.WebPages.Razor.csproj" />

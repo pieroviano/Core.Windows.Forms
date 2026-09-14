@@ -47,17 +47,17 @@ System.Web/Assembly/AssemblyInfo.cs	(?m)^(\[assembly: TypeForwardedTo)	//$1
 # --- P4b: System.Configuration members Mono had and the shipping assembly does not. Each target
 #     is documented in Core.Web/Port/ConfigCompat.cs, including the two fidelity gaps.
 
-# --- Out-of-proc session state. Neither store can come from Mono: StateServer is implemented there
-#     over .NET Remoting (a CLR feature CoreCLR lacks), and the SQLServer handler targets a
-#     Mono-invented `Sessions` table through a Mono.Data.Sqlite factory this port excludes. Both are
-#     rewritten in Core.Web.SessionState - StateServer onto IDistributedCache, SQLServer onto the
-#     stock ASPState stored procedures.
+# --- Out-of-proc session state. The SQLServer handler targets a Mono-invented `Sessions` table
+#     through a Mono.Data.Sqlite factory this port excludes, so it is rewritten in Core.Web.SessionState
+#     onto the stock ASPState stored procedures. StateServer has two stores: Core.Web.SessionState's
+#     IDistributedCache one (the default), and Mono's own remoting client compiled in Core.Web.Remoting.
+#     The type comes from PortSessionState.StateServerProviderType, which the host sets.
 #
 #     Named as a STRING rather than typeof, deliberately: Core.Web must not reference
 #     Core.Web.SessionState (that would put Microsoft.Data.SqlClient in front of every application,
 #     session state or not). The provider model loads the type by name at runtime, which is what it
 #     is for. Mono's SessionSQLServerHandler stays compiled and reachable through mode="Custom".
-System.Web.SessionState_2.0/SessionStateModule.cs	settings = new ProviderSettings \(null, typeof \(SessionStateServerHandler\)\.AssemblyQualifiedName\);	settings = new ProviderSettings (null, "System.Web.SessionState.DistributedCacheSessionStateStore, Core.Web.SessionState");
+System.Web.SessionState_2.0/SessionStateModule.cs	settings = new ProviderSettings \(null, typeof \(SessionStateServerHandler\)\.AssemblyQualifiedName\);	settings = new ProviderSettings (null, PortSessionState.StateServerProviderType);
 System.Web.SessionState_2.0/SessionStateModule.cs	settings = new ProviderSettings \(null, typeof \(SessionSQLServerHandler\)\.AssemblyQualifiedName\);	settings = new ProviderSettings (null, "System.Web.SessionState.SqlSessionStateStore, Core.Web.SessionState");
 
 # --- RuntimeEnvironment.SystemConfigurationFile throws PlatformNotSupportedException on .NET Core.
@@ -508,3 +508,28 @@ System.Web.Script.Services/LogicalTypeInfo.cs	ret\.Add \(nvc\.GetKey \(i\), nvc\
 #     HttpOnly so client script cannot read or plant a session id (VSWhidbey 414687); upstream left it
 #     readable from document.cookie.
 System.Web.SessionState_2.0/SessionIDManager.cs	cookie\.Path = request\.ApplicationPath;	cookie.Path = "/"; cookie.HttpOnly = true;
+
+# --- Core.Web.Remoting: mode="StateServer" over tcp remoting (Build/System.Web.Remoting.sources).
+#     A remote contract must be a PUBLIC type - a dynamic proxy assembly cannot subclass or implement
+#     anything else - so RemoteStateServer stays internal and is published through the port's public
+#     IRemoteStateServer. GetItem returns object because the item type, StateServerItem, is internal to
+#     Core.Web and cannot appear in a public signature; the client casts it back. The server needs a
+#     public constructor for RegisterWellKnownServiceType to create it.
+System.Web.SessionState_2.0/RemoteStateServer.cs	internal class RemoteStateServer : MarshalByRefObject \{	internal class RemoteStateServer : MarshalByRefObject, IRemoteStateServer {
+System.Web.SessionState_2.0/RemoteStateServer.cs	internal RemoteStateServer \(\)	public RemoteStateServer ()
+System.Web.SessionState_2.0/RemoteStateServer.cs	internal void (CreateUninitializedItem|Remove|ResetItemTimeout|ReleaseItemExclusive|SetAndReleaseItemExclusive) \(	public void $1 (
+System.Web.SessionState_2.0/RemoteStateServer.cs	internal StateServerItem GetItem \(	public object GetItem (
+#     The client: Activator.GetObject does not exist on .NET Core - RemotingServices.Connect is the
+#     library's equivalent. RemotingConfiguration.Configure (null) applied the application's remoting
+#     config, which on .NET Framework also brought machine.config's delay-loaded tcp client channel; the
+#     library loads that channel on demand, and throws when asked to configure from no file at all, so
+#     the call becomes the allow-listing a remote StateServerItem needs to deserialize.
+System.Web.SessionState_2.0/SessionStateServerHandler.cs	RemoteStateServer stateServer;	IRemoteStateServer stateServer;
+System.Web.SessionState_2.0/SessionStateServerHandler.cs	RemotingConfiguration\.Configure \(null\);	RemoteStateServerHost.AllowStateServerTypes ();
+System.Web.SessionState_2.0/SessionStateServerHandler.cs	stateServer = Activator\.GetObject \(typeof \(RemoteStateServer\), cons\) as RemoteStateServer;	stateServer = (IRemoteStateServer) RemotingServices.Connect (typeof (IRemoteStateServer), cons);
+System.Web.SessionState_2.0/SessionStateServerHandler.cs	StateServerItem item = stateServer\.GetItem \(	StateServerItem item = (StateServerItem) stateServer.GetItem (
+
+# --- HttpRuntime.UnloadAppDomain: tell the host the application wants to be replaced. On .NET Core the
+#     AppDomain.Unload at the end of the sequence throws and is swallowed, so without this nothing
+#     acts on it; a child-domain host replaces the process. See Core.Web/Port/PortApplicationLifetime.cs.
+System.Web/HttpRuntime.cs	(\t\t\tdomainUnloading = true;)	$1 System.Web.Hosting.PortApplicationLifetime.OnUnloadRequested ();

@@ -4,9 +4,8 @@
 // Upstream: mono/mcs/class/System.Web/System.Web.Hosting/ApplicationHost.cs
 //
 // CreateApplicationHost() built a second AppDomain and marshalled the host into it. There is
-// one AppDomain on .NET Core, and this port runs exactly one application per process
-// (see PORT-System.Web-Kestrel-PLAN.md, P1), so that entry point is gone. What remains are the
-// two members the rest of the tree actually consumes:
+// one AppDomain on .NET Core; CreateApplicationHost delegates to Core.Web.Remoting, which uses a child
+// process instead (see below). The rest of the tree consumes two other members:
 //
 //   MonoHostedDataKey  - BuildManager and WebConfigurationHost probe AppDomain data under this
 //                        key to decide whether they are running hosted. WebFormsRuntimeHost sets
@@ -44,13 +43,34 @@ namespace System.Web.Hosting
 			return files [0];
 		}
 
-		// Kept so that application code calling it still compiles. Creating a second hosting
-		// AppDomain is not possible on .NET Core; the Kestrel host owns the single application.
+		// A second AppDomain cannot exist on .NET Core, but a child PROCESS can play its part:
+		// Core.Web.Remoting starts one, initialises the runtime in it for the application, and returns a
+		// remoting proxy to the host object. It is found by name so Core.Web takes no remoting
+		// dependency; without it the call fails naming the package to add.
+		const string FactoryTypeName = "System.Web.Hosting.RemotingApplicationHostFactory, Core.Web.Remoting";
+
 		public static object CreateApplicationHost (Type hostType, string virtualDir, string physicalDir)
 		{
-			throw new PlatformNotSupportedException (
-				"ApplicationHost.CreateApplicationHost is not supported: this port hosts a single " +
-				"application per process. Initialise the runtime through the Kestrel host instead.");
+			if (hostType == null)
+				throw new ArgumentNullException ("hostType");
+			if (!typeof (MarshalByRefObject).IsAssignableFrom (hostType))
+				throw new ArgumentException ("hostType must derive from MarshalByRefObject.", "hostType");
+
+			Type factoryType = Type.GetType (FactoryTypeName, throwOnError: false);
+			if (factoryType == null)
+				throw new PlatformNotSupportedException (
+					"ApplicationHost.CreateApplicationHost needs Core.Web.Remoting: an application domain is " +
+					"a child process on .NET Core, and that assembly provides it. Reference the " +
+					"Core.AspNet.Web.Remoting package.");
+
+			var factory = (IApplicationHostFactory) Activator.CreateInstance (factoryType, nonPublic: true);
+			return factory.CreateApplicationHost (hostType, virtualDir, physicalDir);
 		}
+	}
+
+	/// <summary>Implemented by Core.Web.Remoting; see ApplicationHost.CreateApplicationHost.</summary>
+	internal interface IApplicationHostFactory
+	{
+		object CreateApplicationHost (Type hostType, string virtualDir, string physicalDir);
 	}
 }

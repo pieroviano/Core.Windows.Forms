@@ -1,0 +1,9 @@
+# Compile list for Core.Web.Remoting, relative to mono/mcs/class/System.Web. Read by Tools/gen-sources.ps1.
+#
+# These are the System.Web files whose only obstacle was .NET Remoting. Core.Web still excludes them
+# (Tools/port-exclusions.txt) so that it carries no remoting dependency; this manifest is exempt from
+# those exclusions. Patches in Tools/port-patches.txt apply as usual.
+System.Web.SessionState_2.0/RemoteStateServer.cs
+System.Web.SessionState_2.0/SessionStateServerHandler.cs
+#W3 System.Web.Hosting/ApplicationManager.cs
+#W3 System.Web.Hosting/ApplicationInfo.cs

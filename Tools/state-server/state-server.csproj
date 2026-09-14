@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The aspnet_state.exe equivalent: a process holding sessions for <sessionState mode="StateServer">
+       applications that call UseWebFormsRemoteStateServer. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFrameworks>net10.0</TargetFrameworks>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AssemblyName>state-server</AssemblyName>
+    <RootNamespace>StateServer</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <NoWarn>$(NoWarn);CS8002</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\AspNetCore.Web.Remoting\AspNetCore.Web.Remoting.csproj" />
+  </ItemGroup>
+  <Import Project="..\..\build\WebFormsPort.targets" />
+</Project>

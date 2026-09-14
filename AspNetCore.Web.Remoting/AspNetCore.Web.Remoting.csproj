@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+    <!--
+    The parts of ASP.NET that stood on .NET Remoting and AppDomains, rebuilt on
+    Net4x.Runtime.Remoting / Net4x.AppDomain (packages Core.Runtime.Remoting, Core.AppDomain.Library,
+    Core.AppDomain.Host):
+
+      *.rem endpoints          HttpRemotingHandlerFactory hooks an HttpChannel into the WebForms pipeline
+      mode="StateServer"       Mono's RemoteStateServer / SessionStateServerHandler, over tcp remoting
+      CreateApplicationHost    an application domain is a child process
+      ApplicationManager       one child domain per application id
+      UseWebFormsApplications  several applications behind one Kestrel, recycled on file change
+
+    Why a separate assembly rather than part of Core.Web: every application references Core.Web, and
+    most never touch any of this. Core.Web reaches the types here by NAME (ApplicationHost, the
+    StateServer provider string, root web.config's *.rem mapping), so it has no compile-time reference
+    in this direction.
+  -->
+    <PropertyGroup>
+        <PackageOutputPath>$(SolutionDir)Packages/</PackageOutputPath>
+        <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+        <Version>$(VersionPrefix).$(VersionSuffix)</Version>
+        <TargetFrameworks>net6.0;net8.0;net10.0</TargetFrameworks>
+        <AssemblyName>Core.Web.Remoting</AssemblyName>
+        <RootNamespace>System.Web</RootNamespace>
+        <LangVersion>latest</LangVersion>
+        <Nullable>disable</Nullable>
+        <ImplicitUsings>disable</ImplicitUsings>
+        <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+        <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+        <!-- Upstream files compile at the same (zero) warning level as the rest of the ported tree;
+             Port/ and Overrides/ are held clean by Tools/lint-port-code.ps1. CS8002: the remoting
+             packages are not strong-named, which .NET does not require. SYSLIB0010/CS0672: the
+             lifetime-service overrides upstream declares, see Net4x.Runtime.Remoting's README. -->
+        <NoWarn>$(NoWarn);612;618;436;1591;0108;0114;0067;0162;0169;0219;0414;0649;CS8002;SYSLIB0010;CS0672</NoWarn>
+        <WarningLevel>0</WarningLevel>
+        <DefineConstants>$(DefineConstants);NET_1_1;NET_2_0;NET_3_5;NET_4_0;NET_4_5;SYSTEM_WEB_PORT;MONO</DefineConstants>
+        <PackageId>Core.AspNet.Web.Remoting</PackageId>
+        <Description>.NET Remoting and AppDomain hosting for the ported ASP.NET: *.rem endpoints, mode="StateServer" over remoting, ApplicationHost.CreateApplicationHost, ApplicationManager, and several recycled applications behind one Kestrel.</Description>
+    </PropertyGroup>
+    <ItemGroup>
+        <!-- The multi-application host is ASP.NET Core middleware, and the child side runs the same
+             WebForms middleware against a request rebuilt from the parent's. -->
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Core.Runtime.Remoting" Version="$(CoreRuntimeRemotingVersion).$(VersionBuildSuffix)" />
+        <PackageReference Include="Core.AppDomain.Library" Version="$(CoreAppDomainVersion).$(VersionBuildSuffix)" />
+        <!-- No API: delivers the host program a child domain runs, through build/ targets that copy it
+             into the output. PrivateAssets="none" because build assets are private by default: without
+             it the targets reach this project but not the application referencing it, which compiles,
+             deploys no host, and fails at the first child domain with the list of paths searched. -->
+        <PackageReference Include="Core.AppDomain.Host" Version="$(CoreAppDomainVersion).$(VersionBuildSuffix)" PrivateAssets="none" />
+        <PackageReference Include="Net4x.NuGetUtility" Version="$(NuGetUtilityVersion)" PrivateAssets="All" />
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\AspNetCore.Web\AspNetCore.Web.csproj" />
+        <ProjectReference Include="..\AspNetCore.Web.Hosting.Kestrel\AspNetCore.Web.Hosting.Kestrel.csproj" />
+    </ItemGroup>
+    <!-- Upstream sources, compiled in place. Regenerate with: Tools/gen-sources.ps1 -->
+    <Import Project="Sources.generated.props" />
+    <ItemGroup>
+        <Compile Include="Generated\**\*.cs" />
+        <Compile Include="Overrides\**\*.cs" />
+        <Compile Include="Port\**\*.cs" />
+    </ItemGroup>
+    <PropertyGroup>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+    </PropertyGroup>
+    <ItemGroup>
+        <Content Include="README.md" Link="README.md" Pack="true" PackagePath="\README.md" />
+        <Content Include="$(MSBuildThisFileDirectory)..\THIRD-PARTY-NOTICES.md" Link="THIRD-PARTY-NOTICES.md" Pack="true" PackagePath="\THIRD-PARTY-NOTICES.md" />
+    </ItemGroup>
+    <Import Project="..\Build\WebFormsPort.targets" />
+</Project>

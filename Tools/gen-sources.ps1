@@ -164,6 +164,17 @@ $projects = @(
             @{ List = 'System.Web.Http.WebHost\System.Web.Http.WebHost.dll.sources'; Base = 'System.Web.Http.WebHost' }
         )
         Globs = @()
+    },
+    # The remoting-dependent half of System.Web: the StateServer client and server, ApplicationManager
+    # and ApplicationInfo. port-exclusions.txt drops these from Core.Web - which cannot take a remoting
+    # dependency - so this manifest is exempt from it (IgnoreExclusions): it names exactly the files
+    # that belong here, and an exclusion written for Core.Web would silently empty it.
+    @{
+        Name = 'AspNetCore.Web.Remoting'
+        Manifests = @(
+            @{ ListPath = 'Build/System.Web.Remoting.sources'; BasePath = 'Mono/mcs/class/System.Web'; IgnoreExclusions = $true }
+        )
+        Globs = @()
     }
 )
 
@@ -235,7 +246,7 @@ foreach ($proj in $projects) {
             $rel = $line.Trim()
             if ($rel -eq '' -or $rel.StartsWith('#')) { continue }
             $abs = [System.IO.Path]::GetFullPath((Join-Path $baseDir ($rel -replace '/', '\')))
-            $inputs.Add([pscustomobject]@{ Rel = $rel; Abs = $abs })
+            $inputs.Add([pscustomobject]@{ Rel = $rel; Abs = $abs; IgnoreExclusions = [bool]$m.IgnoreExclusions })
         }
     }
 
@@ -260,7 +271,9 @@ foreach ($proj in $projects) {
 
         $key = $abs -replace '\\', '/'
         $skip = $false
-        foreach ($p in $patterns) { if ($key.Contains($p)) { $skip = $true; break } }
+        if (-not $item.IgnoreExclusions) {
+            foreach ($p in $patterns) { if ($key.Contains($p)) { $skip = $true; break } }
+        }
         if ($skip) { $dropped.Add($rel); continue }
 
         $flat = ($rel -replace '^\./', '' -replace '^(\.\./)+', '') -replace '/', '__'

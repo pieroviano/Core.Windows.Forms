@@ -123,7 +123,7 @@ namespace System.Web.SessionState
 					break;
 
 				case SessionStateMode.StateServer:
-					settings = new ProviderSettings (null, "System.Web.SessionState.DistributedCacheSessionStateStore, Core.Web.SessionState");
+					settings = new ProviderSettings (null, PortSessionState.StateServerProviderType);
 					break;
 
 				default:
