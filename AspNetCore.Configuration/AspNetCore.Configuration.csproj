@@ -23,7 +23,7 @@
         <DefineConstants>$(DefineConstants);CONFIGURATION_DEP</DefineConstants>
         <DefineConstants>$(DefineConstants);XML_DEP</DefineConstants>
         <DefineConstants>$(DefineConstants);SYSTEM_WEB_PORT;MONO</DefineConstants>
-        <PackageId>Net4x.AspNet$(AssemblyName)</PackageId>
+        <PackageId>Core.AspNet.Configuration</PackageId>
         <Description>System.Configuration for .NET 10, ported from Mono. Supplies the configuration semantics the ported System.Web is written against, which the shipping System.Configuration.ConfigurationManager cannot provide.</Description>
     </PropertyGroup>
     <ItemGroup>

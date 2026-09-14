@@ -24,7 +24,7 @@
         <RootNamespace>System.Web.Http</RootNamespace>
         <DefineConstants>$(DefineConstants);ASPNETMVC</DefineConstants>
         <DefineConstants>$(DefineConstants);NET_4_0;NET_4_5;MONO;SYSTEM_WEB_PORT</DefineConstants>
-        <PackageId>Net4x.AspNetCore.Web.Http.Base</PackageId>
+        <PackageId>Core.AspNet.Web.Http.Library</PackageId>
         <Description>ASP.NET Web API on .NET 10 - ApiController, attribute and convention routing, content negotiation, and JSON and XML formatters.</Description>
         <!-- Apache-2.0 for the aspnetwebstack sources this compiles, MIT for Mono's AssemblyInfo.cs and
              this port's own code. See Directory.Build.props for why the expression must be explicit. -->

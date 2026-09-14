@@ -25,7 +25,7 @@
         <Nullable>disable</Nullable>
         <ImplicitUsings>disable</ImplicitUsings>
         <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
-        <PackageId>Net4x.AspNet$(AssemblyName)</PackageId>
+        <PackageId>Core.AspNet.Web.ServiceModel</PackageId>
         <Description>Hosts .svc (WCF) endpoints on .NET 10 through CoreWCF, at the path each .svc file sits at, keeping your existing URLs and contracts.</Description>
     </PropertyGroup>
     <ItemGroup>

@@ -11,7 +11,7 @@
         <ImplicitUsings>disable</ImplicitUsings>
         <LangVersion>latest</LangVersion>
         <WebFormsPortIsConfigBridge>true</WebFormsPortIsConfigBridge>
-        <PackageId>Net4x.AspNet$(AssemblyName)</PackageId>
+        <PackageId>Core.AspNet.Web.ConfigBridge</PackageId>
         <Description>Lets third-party libraries that read ConfigurationManager.AppSettings see your web.config, by installing a configuration system into the shipping System.Configuration.ConfigurationManager package.</Description>
     </PropertyGroup>
     <!--

@@ -25,7 +25,7 @@
         <DefineConstants>$(DefineConstants);ASPNETMVC</DefineConstants>
         <DefineConstants>$(DefineConstants);NET_4_0;NET_4_5;MONO;SYSTEM_WEB_PORT</DefineConstants>
         <AspNetWebStackDir>$(MSBuildThisFileDirectory)..\Mono\external\aspnetwebstack\src\</AspNetWebStackDir>
-        <PackageId>Net4x.AspNet$(AssemblyName)</PackageId>
+        <PackageId>Core.AspNet.Web.Http.WebHost</PackageId>
         <Description>Hosts ASP.NET Web API inside the ported System.Web pipeline, so .aspx pages and API controllers serve from one application.</Description>
         <!-- Apache-2.0 for the aspnetwebstack sources this compiles, MIT for Mono's AssemblyInfo.cs and
              this port's own code. See Directory.Build.props for why the expression must be explicit. -->

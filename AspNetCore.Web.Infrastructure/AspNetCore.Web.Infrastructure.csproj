@@ -25,7 +25,7 @@
         <AspNetWebStackDir>$(MSBuildThisFileDirectory)..\Mono\external\aspnetwebstack\src\</AspNetWebStackDir>
         <DefineConstants>$(DefineConstants);ASPNETWEBPAGES</DefineConstants>
         <DefineConstants>$(DefineConstants);NET_4_0;NET_4_5;MONO;SYSTEM_WEB_PORT</DefineConstants>
-        <PackageId>Net4x.AspNet$(AssemblyName)</PackageId>
+        <PackageId>Core.AspNet.Web.Infrastructure</PackageId>
         <Description>System.Web.Infrastructure on .NET 10 - the dynamic module registration point that PreApplicationStartMethod uses. Arrives transitively.</Description>
     </PropertyGroup>
     <!-- Upstream sources, compiled in place. Regenerate with: Tools/gen-sources.ps1 -->

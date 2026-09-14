@@ -30,7 +30,7 @@
         <!-- Same convention as every other package here: the ASSEMBLY is Core.Web.Optimization (the port
          cannot use the real names - see Build/WebFormsPort.targets), while the PACKAGE keeps the
          AspNetCore.* identity. AspNet + Core.Web.Optimization = AspNetCore.Web.Optimization. -->
-        <PackageId>Net4x.AspNet$(AssemblyName)</PackageId>
+        <PackageId>Core.AspNet.Web.Optimization</PackageId>
         <Description>System.Web.Optimization on .NET 10 - script and style bundling with content-hash URLs. Bundles are concatenated and cached, not minified.</Description>
         <PackageReadmeFile>README.md</PackageReadmeFile>
     </PropertyGroup>

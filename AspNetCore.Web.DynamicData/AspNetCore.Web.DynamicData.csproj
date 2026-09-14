@@ -20,7 +20,7 @@
         <TargetFrameworks>net6.0;net8.0;net10.0</TargetFrameworks>
         <AssemblyName>Core.Web.DynamicData</AssemblyName>
         <RootNamespace>System.Web.DynamicData</RootNamespace>
-        <PackageId>Net4x.AspNet$(AssemblyName)</PackageId>
+        <PackageId>Core.AspNet.Web.DynamicData</PackageId>
         <Description>ASP.NET Dynamic Data on .NET 10 - scaffolded list, detail and edit pages driven by your model, running on IQueryable or EF Core instead of LINQ to SQL.</Description>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <LangVersion>latest</LangVersion>

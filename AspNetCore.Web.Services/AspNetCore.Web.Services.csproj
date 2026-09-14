@@ -21,7 +21,7 @@
         <MonoServicesDir>$(MSBuildThisFileDirectory)..\mono\mcs\class\System.Web.Services\</MonoServicesDir>
         <DefineConstants>$(DefineConstants);NET_1_1;NET_2_0;NET_3_5;NET_4_0;NET_4_5;SYSTEM_WEB_PORT;MONO</DefineConstants>
         <DefineConstants>$(DefineConstants);MONO_BROKEN_CONFIGURATION_DLL</DefineConstants>
-        <PackageId>Net4x.AspNet$(AssemblyName)</PackageId>
+        <PackageId>Core.AspNet.Web.Services</PackageId>
         <Description>ASP.NET .asmx web services on .NET 10 - SOAP and JSON [WebMethod] endpoints, ?wsdl and the help page. Serving only; WSDL client-proxy generation is not available on .NET.</Description>
     </PropertyGroup>
     <ItemGroup>

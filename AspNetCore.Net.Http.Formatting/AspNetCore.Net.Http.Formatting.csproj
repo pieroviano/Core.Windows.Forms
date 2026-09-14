@@ -28,7 +28,7 @@
         <RootNamespace>System.Net.Http.Formatting</RootNamespace>
         <DefineConstants>$(DefineConstants);ASPNETMVC</DefineConstants>
         <DefineConstants>$(DefineConstants);NET_4_0;NET_4_5;MONO;SYSTEM_WEB_PORT</DefineConstants>
-        <PackageId>Net4x.AspNet$(AssemblyName)</PackageId>
+        <PackageId>Core.AspNet.Net.Http.Formatting</PackageId>
         <Description>The System.Net.Http.Formatting types Web API is built on - media-type formatters, content negotiation and the formatter collection.</Description>
         <!-- Apache-2.0 for the aspnetwebstack sources this compiles, MIT for Mono's AssemblyInfo.cs and
              this port's own code. See Directory.Build.props for why the expression must be explicit. -->
