@@ -1,14 +1,14 @@
-# AspNetCore.Web.Services
+# Core.AspNet.Web.Services
 
 `System.Web.Services` — serving `.asmx` SOAP and JSON web services.
 
 ```xml
-<PackageReference Include="AspNetCore.Web.Services" Version="1.0.0" />
+<PackageReference Include="Core.AspNet.Web.Services" Version="1.0.0" />
 ```
 
-It arrives automatically with `AspNetCore.Web.Hosting.Kestrel`.
+It arrives automatically with `Core.AspNet.Web.Hosting.Kestrel`.
 
-> **Assembly vs package name.** The package is `AspNetCore.Web.Services`; the assembly inside it is `Core.Web.Services`.
+> **Assembly vs package name.** The package is `Core.AspNet.Web.Services`; the assembly inside it is `Core.Web.Services`.
 > .NET ships an empty `System.Web.dll` facade in `Microsoft.NETCore.App` and the host gives the shared
 > framework precedence, so an app-local `System.Web.dll` is never loaded — the port therefore cannot
 > use the original assembly names. **Namespaces are unchanged**, so your code and `Inherits=`
@@ -30,7 +30,7 @@ Core never shipped the CodeDom compile half it depends on.
 Serving is unaffected. To *call* a SOAP service, generate the client with `dotnet-svcutil` or use
 `System.ServiceModel.Primitives`.
 
-For `.svc` (WCF) endpoints rather than `.asmx`, see **`AspNetCore.Web.ServiceModel`**.
+For `.svc` (WCF) endpoints rather than `.asmx`, see **`Core.AspNet.Web.ServiceModel`**.
 
 ## Documentation
 

@@ -22,7 +22,7 @@
         <PackageOutputPath>$(SolutionDir)Packages/</PackageOutputPath>
         <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
         <Version>$(VersionPrefix).$(VersionSuffix)</Version>
-        <TargetFramework>net10.0</TargetFramework>
+        <TargetFrameworks>net6.0;net8.0;net10.0</TargetFrameworks>
         <AssemblyName>Core.Web.SessionState</AssemblyName>
         <RootNamespace>System.Web.SessionState</RootNamespace>
         <LangVersion>latest</LangVersion>
@@ -32,7 +32,7 @@
         <!-- Microsoft.Data.SqlClient requires 9.x; the port's shared default of 8.0.0 would be a
          downgrade, which NuGet treats as an error. Compile assets are excluded either way. -->
         <WebFormsPortConfigurationManagerVersion>9.0.11</WebFormsPortConfigurationManagerVersion>
-        <PackageId>AspNet$(AssemblyName)</PackageId>
+        <PackageId>Core.AspNet.Web.SessionState</PackageId>
         <Description>Out-of-process session state on .NET 10 - &lt;sessionState mode="StateServer"&gt; over IDistributedCache and mode="SQLServer" against a standard ASPState database.</Description>
     </PropertyGroup>
     <ItemGroup>

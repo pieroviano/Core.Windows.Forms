@@ -162,11 +162,11 @@ One package reference is enough for a WebForms application:
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="AspNetCore.Web.Hosting.Kestrel" Version="1.0.0" />
+  <PackageReference Include="Core.AspNet.Web.Hosting.Kestrel" Version="1.0.0" />
 </ItemGroup>
 ```
 
-It transitively brings in the core of the port (`AspNetCore.Web.Base`, which contains the
+It transitively brings in the core of the port (`Core.AspNet.Web.Forms`, which contains the
 `Core.Web` assembly, plus configuration, services, and extensions), and — importantly — its
 build assets do the fiddly project-file work for you:
 
@@ -178,12 +178,12 @@ build assets do the fiddly project-file work for you:
   your assembly, with `App_Code` shipped as content (the runtime compiles it, not MSBuild) and
   `bin\`/`obj\` excluded.
 
-Then add one package per additional stack you use — `AspNetCore.Web.Mvc` for MVC,
-`AspNetCore.Web.Http` (with `AspNetCore.Web.Http.WebHost` and `AspNetCore.Net.Http.Formatting`)
-for Web API, `AspNetCore.Web.ServiceModel` for `.svc`, `AspNetCore.Web.SessionState` for
+Then add one package per additional stack you use — `Core.AspNet.Web.Mvc` for MVC,
+`Core.AspNet.Web.Http` (with `Core.AspNet.Web.Http.WebHost` and `Core.AspNet.Net.Http.Formatting`)
+for Web API, `Core.AspNet.Web.ServiceModel` for `.svc`, `Core.AspNet.Web.SessionState` for
 out-of-process session, and so on.
 
-Note the deliberate naming split: the **package** is `AspNetCore.Web.Base`, the **assembly**
+Note the deliberate naming split: the **package** is `Core.AspNet.Web.Forms`, the **assembly**
 inside it is `Core.Web`, and the **namespace** is still `System.Web`. The only place the
 assembly name ever surfaces in your application is a `web.config` line that names an assembly
 explicitly.

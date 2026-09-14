@@ -1,14 +1,14 @@
-# AspNetCore.Net.Http.Formatting
+# Core.AspNet.Net.Http.Formatting
 
 `System.Net.Http.Formatting` — the media-type formatters Web API negotiates with.
 
 ```xml
-<PackageReference Include="AspNetCore.Net.Http.Formatting" Version="1.0.0" />
+<PackageReference Include="Core.AspNet.Net.Http.Formatting" Version="1.0.0" />
 ```
 
-You rarely reference this directly; it arrives with `AspNetCore.Web.Http`.
+You rarely reference this directly; it arrives with `Core.AspNet.Web.Http`.
 
-> **Assembly vs package name.** The package is `AspNetCore.Net.Http.Formatting`; the assembly inside it is `Core.Net.Http.Formatting`.
+> **Assembly vs package name.** The package is `Core.AspNet.Net.Http.Formatting`; the assembly inside it is `Core.Net.Http.Formatting`.
 > .NET ships an empty `System.Web.dll` facade in `Microsoft.NETCore.App` and the host gives the shared
 > framework precedence, so an app-local `System.Web.dll` is never loaded — the port therefore cannot
 > use the original assembly names. **Namespaces are unchanged**, so your code and `Inherits=`

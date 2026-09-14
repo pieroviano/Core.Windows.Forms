@@ -1,13 +1,13 @@
-# AspNetCore.Web.ServiceModel
+# Core.AspNet.Web.ServiceModel
 
 Hosts **`.svc` (WCF) endpoints** on .NET 10, keeping the URLs and contracts an existing application
 already has.
 
 ```xml
-<PackageReference Include="AspNetCore.Web.ServiceModel" Version="1.0.0" />
+<PackageReference Include="Core.AspNet.Web.ServiceModel" Version="1.0.0" />
 ```
 
-> **Assembly vs package name.** The package is `AspNetCore.Web.ServiceModel`; the assembly inside it is `Core.Web.ServiceModel`.
+> **Assembly vs package name.** The package is `Core.AspNet.Web.ServiceModel`; the assembly inside it is `Core.Web.ServiceModel`.
 > .NET ships an empty `System.Web.dll` facade in `Microsoft.NETCore.App` and the host gives the shared
 > framework precedence, so an app-local `System.Web.dll` is never loaded — the port therefore cannot
 > use the original assembly names. **Namespaces are unchanged**, so your code and `Inherits=`

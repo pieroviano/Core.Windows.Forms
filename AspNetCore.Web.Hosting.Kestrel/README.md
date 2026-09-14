@@ -1,10 +1,10 @@
-# AspNetCore.Web.Hosting.Kestrel
+# Core.AspNet.Web.Hosting.Kestrel
 
 **Start here.** Hosts a classic ASP.NET application — WebForms, MVC, Razor, Web Pages, Web API — on
 .NET 10 under Kestrel, instead of IIS.
 
 ```xml
-<PackageReference Include="AspNetCore.Web.Hosting.Kestrel" Version="1.0.0" />
+<PackageReference Include="Core.AspNet.Web.Hosting.Kestrel" Version="1.0.0" />
 ```
 
 ```csharp
@@ -31,8 +31,8 @@ That is the whole host, whatever stack the application uses. Your `.aspx`, `.asc
 
 ## What comes with it
 
-`AspNetCore.Web.Base`, `AspNetCore.Configuration`, `AspNetCore.Web.Services`, `AspNetCore.Web.Extensions`
-and `AspNetCore.Web.ConfigBridge` arrive transitively. Add one more package per stack you use — MVC,
+`Core.AspNet.Web.Forms`, `Core.AspNet.Configuration`, `Core.AspNet.Web.Services`, `Core.AspNet.Web.Extensions`
+and `Core.AspNet.Web.ConfigBridge` arrive transitively. Add one more package per stack you use — MVC,
 Web Pages, Web API, WCF, bundling, out-of-process session state.
 
 Two build assets are imported automatically:

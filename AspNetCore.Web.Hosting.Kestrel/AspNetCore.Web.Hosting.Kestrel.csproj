@@ -49,8 +49,8 @@
          build has no facade removal and therefore dies with CS0433 or a first-request
          TypeLoadException. Deriving the packed name from $(PackageId) keeps the two in step even if
          the id changes again. -->
-        <None Include="build\Core.Web.Hosting.Kestrel.props" Pack="true" PackagePath="build\$(PackageId).props" />
-        <None Include="build\Core.Web.Hosting.Kestrel.targets" Pack="true" PackagePath="build\$(PackageId).targets" />
+        <None Include="build\Core.AspNet.Web.Hosting.Kestrel.props" Pack="true" PackagePath="build\" />
+        <None Include="build\Core.AspNet.Web.Hosting.Kestrel.targets" Pack="true" PackagePath="build\" />
         <!-- Packed alongside them, and imported by the .targets above. Removing the empty framework
          System.Web/System.Configuration facades is mandatory for EVERY consumer, so a project that
          gets the port from NuGet has to receive this too - otherwise the PackageReference route is

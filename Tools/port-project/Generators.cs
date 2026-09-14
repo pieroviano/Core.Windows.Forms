@@ -119,8 +119,8 @@ namespace PortProject
 		public static string Write (LegacyProject project, IReadOnlyList<Detection> detections,
 					    string siteName, ApplicationFiles files)
 		{
-			bool wcf = detections.Any (d => d.Package == "AspNetCore.Web.ServiceModel");
-			bool sessionState = detections.Any (d => d.Package == "AspNetCore.Web.SessionState");
+			bool wcf = detections.Any (d => d.Package == PortPackages.ServiceModel);
+			bool sessionState = detections.Any (d => d.Package == PortPackages.SessionState);
 
 			var text = new StringBuilder ();
 

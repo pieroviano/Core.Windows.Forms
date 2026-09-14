@@ -1,4 +1,4 @@
-# AspNetCore.Web.WebPages.Razor
+# Core.AspNet.Web.WebPages.Razor
 
 `System.Web.WebPages.Razor` — the glue between `BuildManager` and Razor: the build provider that
 compiles a `.cshtml` at request time, the Razor host configuration, and the
@@ -6,10 +6,10 @@ compiles a `.cshtml` at request time, the Razor host configuration, and the
 type.
 
 ```xml
-<PackageReference Include="AspNetCore.Web.WebPages.Razor" Version="1.0.0" />
+<PackageReference Include="Core.AspNet.Web.WebPages.Razor" Version="1.0.0" />
 ```
 
-> **Assembly vs package name.** The package is `AspNetCore.Web.WebPages.Razor`; the assembly inside it is `Core.Web.WebPages.Razor`.
+> **Assembly vs package name.** The package is `Core.AspNet.Web.WebPages.Razor`; the assembly inside it is `Core.Web.WebPages.Razor`.
 > .NET ships an empty `System.Web.dll` facade in `Microsoft.NETCore.App` and the host gives the shared
 > framework precedence, so an app-local `System.Web.dll` is never loaded — the port therefore cannot
 > use the original assembly names. **Namespaces are unchanged**, so your code and `Inherits=`

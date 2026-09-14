@@ -17,8 +17,8 @@ namespace WebFormsPort
 	{
 		static readonly Lazy<string> root = new Lazy<string> (FindRoot);
 
-		/// <summary>Repository root - the directory holding AspNetCore.Web.slnx.</summary>
-		public static string Root {
+        /// <summary>Repository root - the directory holding AspNetCore.Web.slnx.</summary>
+        public static string Root {
 			get { return root.Value; }
 		}
 
@@ -49,7 +49,7 @@ namespace WebFormsPort
 			}
 
 			throw new InvalidOperationException (
-				"Could not locate AspNetCore.Web.slnx walking up from " + AppContext.BaseDirectory +
+                "Could not locate AspNetCore.Web.slnx walking up from " + AppContext.BaseDirectory +
 				". The functional tests read the sample application from its source directory and " +
 				"cannot run outside the repository.");
 		}

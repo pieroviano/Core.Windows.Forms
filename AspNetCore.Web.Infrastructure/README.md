@@ -1,16 +1,16 @@
-# AspNetCore.Web.Infrastructure
+# Core.AspNet.Web.Infrastructure
 
 `Microsoft.Web.Infrastructure` — a small support assembly the ASP.NET Web Stack depends on for
 dynamic module registration.
 
 ```xml
-<PackageReference Include="AspNetCore.Web.Infrastructure" Version="1.0.0" />
+<PackageReference Include="Core.AspNet.Web.Infrastructure" Version="1.0.0" />
 ```
 
-You almost certainly do not reference this directly; it arrives with `AspNetCore.Web.WebPages.Base` and
-`AspNetCore.Web.Mvc`, which need it.
+You almost certainly do not reference this directly; it arrives with `Core.AspNet.Web.WebPages.Base` and
+`Core.AspNet.Web.Mvc`, which need it.
 
-> **Assembly vs package name.** The package is `AspNetCore.Web.Infrastructure`; the assembly inside it is `Core.Web.Infrastructure`.
+> **Assembly vs package name.** The package is `Core.AspNet.Web.Infrastructure`; the assembly inside it is `Core.Web.Infrastructure`.
 > .NET ships an empty `System.Web.dll` facade in `Microsoft.NETCore.App` and the host gives the shared
 > framework precedence, so an app-local `System.Web.dll` is never loaded — the port therefore cannot
 > use the original assembly names. **Namespaces are unchanged**, so your code and `Inherits=`

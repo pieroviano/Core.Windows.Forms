@@ -18,8 +18,8 @@ CoreCLR.
 ## Commands
 
 ```powershell
-dotnet build AspNetCore.Web.slnx          # whole port (~35s)
-dotnet build AspNetCore.Web/AspNetCore.Web.csproj
+dotnet build Core.AspNet.Web.slnx          # whole port (~35s)
+dotnet build Core.AspNet.Web/Core.AspNet.Web.csproj
 
 # Regenerate the compile lists from Mono's .sources manifests. Run after ANY change to
 # Tools/port-exclusions.txt, Tools/port-patches.txt, or an Overrides/ directory.
@@ -47,10 +47,10 @@ dotnet run --project Samples/WebFormsSample
 dotnet run --project Samples/WebFormsSampleVB
 
 # Tests (445 across fifteen projects, ~100s)
-dotnet test AspNetCore.Web.slnx
-dotnet test Tests/AspNetCore.Web.FunctionalTests
-dotnet test Tests/AspNetCore.Web.FunctionalTests --filter "FullyQualifiedName~PostbackTests"
-dotnet test Tests/AspNetCore.Web.FunctionalTests --filter "Server_side_validation_blocks_the_click_handler"
+dotnet test Core.AspNet.Web.slnx
+dotnet test Tests/Core.AspNet.Web.FunctionalTests
+dotnet test Tests/Core.AspNet.Web.FunctionalTests --filter "FullyQualifiedName~PostbackTests"
+dotnet test Tests/Core.AspNet.Web.FunctionalTests --filter "Server_side_validation_blocks_the_click_handler"
 ```
 
 ## Tests
@@ -63,21 +63,21 @@ its own process, which is the isolation that buys.
 
 | Project | Covers | Why separate |
 |---|---|---|
-| `AspNetCore.Web.FunctionalTests` | Core.Web, Hosting.Kestrel, Extensions, Services — via `Samples/WebFormsSample` | hosts the C# application |
-| `AspNetCore.Web.FunctionalTests.VB` | the VB compilation path — via `Samples/WebFormsSampleVB` | hosts a *different* application |
-| `AspNetCore.Configuration.Tests` | Core.Configuration, machine.config extraction, gen-config retargeting | needs a cold configuration system |
-| `AspNetCore.Web.ConfigBridge.Tests` | the packaged `ConfigurationManager` bridge | `SetConfigurationSystem` is one-shot per process |
-| `AspNetCore.Web.HostingTests` | ASP.NET Core auth bridge, host-supplied `machine.config` | both are set before `Initialize` and cannot change after |
-| `AspNetCore.Web.BrowserTests` | real Chromium via Playwright (headed by default) | drives the sample as a user would |
-| `AspNetCore.Web.Razor.Tests` | `Core.Web.Razor` parser and code generator | no server, no runtime init at all |
-| `AspNetCore.Web.Mvc.BrowserTests` | MVC routing and Razor views via Playwright, plus HTTP suites for attribute routing, bundling and `@await` | hosts `Samples/MvcSample` |
-| `AspNetCore.Web.WebPages.Tests` | standalone `.cshtml` routing and rendering | hosts `Samples/WebPagesSample` |
-| `AspNetCore.Web.Http.Tests` | Web API routing, negotiation and model binding | hosts `Samples/WebApiSample` |
-| `AspNetCore.Web.ServiceModel.Tests` | `.svc` (WCF) discovery and SOAP hosting on CoreWCF | hosts `Samples/WcfSample`; the `.svc` scan runs once per process |
-| `AspNetCore.Web.SessionState.Tests` | out-of-proc session: `StateServer` over HTTP, `SQLServer` against ASPState | hosts `Samples/SessionStateSample`; `SessionStateHostServices` freezes on first use |
-| `AspNetCore.Web.LegacyStacks.Tests` | System.Web.Mail over a real SMTP socket, the object-graph state serializer, LinqDataSource and Dynamic Data on IQueryable | hosts no application |
-| `AspNetCore.Web.LegacyStacks.HttpTests` | Dynamic Data scaffolding and `LinqDataSource` through a `GridView`, over real HTTP | hosts `Samples/DynamicDataSample` |
-| `AspNetCore.Web.PortTool.Tests` | `Tools/port-project` against hand-written legacy fixtures, including really running `dotnet build` on the converted output | hosts no application; needs the local package feed populated |
+| `Core.AspNet.Web.FunctionalTests` | Core.Web, Hosting.Kestrel, Extensions, Services — via `Samples/WebFormsSample` | hosts the C# application |
+| `Core.AspNet.Web.FunctionalTests.VB` | the VB compilation path — via `Samples/WebFormsSampleVB` | hosts a *different* application |
+| `Core.AspNet.Configuration.Tests` | Core.Configuration, machine.config extraction, gen-config retargeting | needs a cold configuration system |
+| `Core.AspNet.Web.ConfigBridge.Tests` | the packaged `ConfigurationManager` bridge | `SetConfigurationSystem` is one-shot per process |
+| `Core.AspNet.Web.HostingTests` | ASP.NET Core auth bridge, host-supplied `machine.config` | both are set before `Initialize` and cannot change after |
+| `Core.AspNet.Web.BrowserTests` | real Chromium via Playwright (headed by default) | drives the sample as a user would |
+| `Core.AspNet.Web.Razor.Tests` | `Core.Web.Razor` parser and code generator | no server, no runtime init at all |
+| `Core.AspNet.Web.Mvc.BrowserTests` | MVC routing and Razor views via Playwright, plus HTTP suites for attribute routing, bundling and `@await` | hosts `Samples/MvcSample` |
+| `Core.AspNet.Web.WebPages.Tests` | standalone `.cshtml` routing and rendering | hosts `Samples/WebPagesSample` |
+| `Core.AspNet.Web.Http.Tests` | Web API routing, negotiation and model binding | hosts `Samples/WebApiSample` |
+| `Core.AspNet.Web.ServiceModel.Tests` | `.svc` (WCF) discovery and SOAP hosting on CoreWCF | hosts `Samples/WcfSample`; the `.svc` scan runs once per process |
+| `Core.AspNet.Web.SessionState.Tests` | out-of-proc session: `StateServer` over HTTP, `SQLServer` against ASPState | hosts `Samples/SessionStateSample`; `SessionStateHostServices` freezes on first use |
+| `Core.AspNet.Web.LegacyStacks.Tests` | System.Web.Mail over a real SMTP socket, the object-graph state serializer, LinqDataSource and Dynamic Data on IQueryable | hosts no application |
+| `Core.AspNet.Web.LegacyStacks.HttpTests` | Dynamic Data scaffolding and `LinqDataSource` through a `GridView`, over real HTTP | hosts `Samples/DynamicDataSample` |
+| `Core.AspNet.Web.PortTool.Tests` | `Tools/port-project` against hand-written legacy fixtures, including really running `dotnet build` on the converted output | hosts no application; needs the local package feed populated |
 
 The functional suites start a **real Kestrel server** on a loopback port (`http://127.0.0.1:0`) and
 drive it with a real `HttpClient`, rather than using `TestServer` — `AspNetCoreWorkerRequest` is
@@ -118,7 +118,7 @@ and both are easy to mistake for bugs:
 * **It accumulates, and nothing prunes it.** A package id outlives the project that produced it, so a
   rename or a retirement leaves an artefact behind that still satisfies restores. Everything keeps
   working here and fails on a machine that has never built this port — the failure whoever caused it
-  cannot reproduce. `Tests/AspNetCore.Web.PortTool.Tests` is the suite most exposed to it, since it
+  cannot reproduce. `Tests/Core.AspNet.Web.PortTool.Tests` is the suite most exposed to it, since it
   restores generated projects against this feed. Run before a release:
 
   ```powershell
@@ -126,11 +126,11 @@ and both are easy to mistake for bugs:
   powershell -ExecutionPolicy Bypass -File Tools/prune-feed.ps1 -Delete  # remove
   ```
 
-  It only ever considers `AspNetCore.*`. The feed holds other products' packages, which are none of
+  It only ever considers `Core.AspNet.*`. The feed holds other products' packages, which are none of
   this repository's business.
 
 * **It is rewritten while it is read.** Each `.nupkg` is deleted and recreated on every build, so a
-  test restoring from the feed can find a package briefly absent. `Tests/AspNetCore.Web.PortTool.Tests`
+  test restoring from the feed can find a package briefly absent. `Tests/Core.AspNet.Web.PortTool.Tests`
   copies what it needs into a private feed first, retrying while the build settles — which is why that
   suite has a retry loop that would otherwise look like superstition.
 
@@ -141,17 +141,17 @@ nothing should: the whole point is that the push is a separate, deliberate step.
 
 | Project directory | Assembly | Namespace root |
 |---|---|---|
-| `AspNetCore.Web` | `Core.Web` | `System.Web` |
-| `AspNetCore.Configuration` | `Core.Configuration` | `System.Configuration` |
-| `AspNetCore.Web.Services` | `Core.Web.Services` | `System.Web.Services` |
-| `AspNetCore.Web.Extensions` | `Core.Web.Extensions` | `System.Web.Extensions` |
-| `AspNetCore.Web.Hosting.Kestrel` | `Core.Web.Hosting.Kestrel` | `System.Web.Hosting.Kestrel` |
-| `AspNetCore.Web.ConfigBridge` | `Core.Web.ConfigBridge` | `System.Web.Configuration.Bridge` |
-| `AspNetCore.Web.Razor` | `Core.Web.Razor` | `System.Web.Razor` |
-| `AspNetCore.Web.Optimization` | `Core.Web.Optimization` | `System.Web.Optimization` |
-| `AspNetCore.Web.ServiceModel` | `Core.Web.ServiceModel` | `System.Web.ServiceModel` |
-| `AspNetCore.Web.SessionState` | `Core.Web.SessionState` | `System.Web.SessionState` |
-| `AspNetCore.Web.DynamicData` | `Core.Web.DynamicData` | `System.Web.DynamicData` |
+| `Core.AspNet.Web` | `Core.Web` | `System.Web` |
+| `Core.AspNet.Configuration` | `Core.Configuration` | `System.Configuration` |
+| `Core.AspNet.Web.Services` | `Core.Web.Services` | `System.Web.Services` |
+| `Core.AspNet.Web.Extensions` | `Core.Web.Extensions` | `System.Web.Extensions` |
+| `Core.AspNet.Web.Hosting.Kestrel` | `Core.Web.Hosting.Kestrel` | `System.Web.Hosting.Kestrel` |
+| `Core.AspNet.Web.ConfigBridge` | `Core.Web.ConfigBridge` | `System.Web.Configuration.Bridge` |
+| `Core.AspNet.Web.Razor` | `Core.Web.Razor` | `System.Web.Razor` |
+| `Core.AspNet.Web.Optimization` | `Core.Web.Optimization` | `System.Web.Optimization` |
+| `Core.AspNet.Web.ServiceModel` | `Core.Web.ServiceModel` | `System.Web.ServiceModel` |
+| `Core.AspNet.Web.SessionState` | `Core.Web.SessionState` | `System.Web.SessionState` |
+| `Core.AspNet.Web.DynamicData` | `Core.Web.DynamicData` | `System.Web.DynamicData` |
 
 .NET ships **empty** `System.Web.dll` and `System.Configuration.dll` facades in
 `Microsoft.NETCore.App`, and the host gives the shared framework precedence for assemblies it owns —
@@ -160,7 +160,7 @@ startup with `FileNotFoundException`. Hence `Core.*`. Namespaces are unchanged, 
 and generated page classes are unaffected.
 
 Two directory-vs-assembly-name traps:
-- `Tools/gen-sources.ps1` and `gen-config.ps1` key on the **directory** name (`AspNetCore.Web`). Getting
+- `Tools/gen-sources.ps1` and `gen-config.ps1` key on the **directory** name (`Core.AspNet.Web`). Getting
   it wrong silently creates a new directory and leaves the real project building against a stale props file.
 - Config files must name the **assembly** (`Core.Web`), which is what `gen-config.ps1`'s
   `Retarget-PortAssembly` does.
@@ -193,7 +193,7 @@ Each upstream file goes down exactly one of four paths:
    becomes `Overrides/System.Web__HttpRuntime.cs`.
 
 Choose the lightest mechanism that works: patch for mechanical/repetitive edits, override only when a
-file needs real surgery (there are currently four in `AspNetCore.Web/Overrides/`).
+file needs real surgery (there are currently four in `Core.AspNet.Web/Overrides/`).
 
 Other per-project directories: `Port/` (new code written for this port), `Shims/` (stand-ins for
 framework types that no longer exist), `Generated/` (`Consts.cs`, emitted from Mono's `Consts.cs.in`).
@@ -211,7 +211,7 @@ This is the most intricate part of the port, and the source of the most confusin
   `System.Data.OleDb`, etc.) and its types collide by name with `Core.Configuration`'s. `WebFormsPort.targets`
   removes its **compile** assets while keeping it **deployed**, because third-party libraries were
   compiled against its strong-named identity.
-- `AspNetCore.Web.ConfigBridge` then installs an `IInternalConfigSystem` into that package at startup,
+- `Core.AspNet.Web.ConfigBridge` then installs an `IInternalConfigSystem` into that package at startup,
   so a third-party library reading `ConfigurationManager.AppSettings` sees `web.config`. It is the
   **only** project compiled against the package's config types, and everything crossing its boundary
   is a primitive or shared framework type so the two `System.Configuration.*` type sets never meet in
@@ -219,13 +219,13 @@ This is the most intricate part of the port, and the source of the most confusin
 - Type-forwarding facades and `AssemblyLoadContext.Resolving` hooks were both tried and are both
   impossible; the reasons are recorded in `Build/WebFormsPort.targets` — don't re-attempt them.
 - `machine.config` / `root-web.config` are generated by `Tools/gen-config.ps1`, embedded as resources
-  in `Core.Web`, and extracted at runtime by `AspNetCore.Web/Port/MachineConfig.cs`. Edit the
+  in `Core.Web`, and extracted at runtime by `Core.AspNet.Web/Port/MachineConfig.cs`. Edit the
   **generator**, not the generated files. The root `web.config` is what maps `*.aspx` →
   `PageHandlerFactory`; without it nothing is served.
 
 ## Hosting
 
-`app.UseWebForms(...)` (`AspNetCore.Web.Hosting.Kestrel/WebFormsApplicationBuilderExtensions.cs`) is the
+`app.UseWebForms(...)` (`Core.AspNet.Web.Hosting.Kestrel/WebFormsApplicationBuilderExtensions.cs`) is the
 public entry point. `WebFormsRuntimeHost` replaces `ApplicationHost.CreateApplicationHost`: there is
 one AppDomain, so it sets `.appPath` and friends as AppDomain data directly and `HttpRuntime` reads
 them back unmodified. `AspNetCoreWorkerRequest` adapts `HttpWorkerRequest` onto ASP.NET Core's
@@ -238,7 +238,7 @@ Note the namespace trap in that project: it is nested under `System.Web`, so an 
 ## Notable replacements
 
 - **Compilation**: `CodeDomProvider`'s *compile* half throws `PlatformNotSupportedException` on .NET
-  Core, so `AspNetCore.Web/Port/RoslynCompiler.cs` supplies it (`CodeCompileUnit` → generated `.cs` →
+  Core, so `Core.AspNet.Web/Port/RoslynCompiler.cs` supplies it (`CodeCompileUnit` → generated `.cs` →
   `CSharpCompilation` → `Assembly`). The codegen half is untouched and works. Both C# and VB pages
   compile.
 - **`BinaryFormatter`** is gone on .NET 8+, so view state / session objects with no native encoding

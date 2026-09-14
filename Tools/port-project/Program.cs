@@ -151,7 +151,7 @@ namespace PortProject
 
 		static void PrintUsage ()
 		{
-			Console.WriteLine (@"
+			Console.WriteLine ((@"
 port-project - convert an ASP.NET project to run on this port, per PORTING-GUIDE.md
 
   port-project <path-to-.csproj|.vbproj|directory> [options]
@@ -164,7 +164,7 @@ Options
   --force                 overwrite an existing .old backup
   --no-program            do not generate Program.cs
   --no-web-config         do not rewrite web.config
-  --package-version <v>   port package version to reference (default 1.0.0)
+  --package-version <v>   port package version to reference (default " + PortPackages.DefaultVersion + @")
   --json                  emit the plan and findings as JSON
   -h, --help              this text
 
@@ -172,7 +172,7 @@ Exit codes
   0  converted, or previewed with no blockers
   1  usage or I/O error
   2  blockers found - nothing was changed
-".TrimStart ());
+").TrimStart ());
 		}
 	}
 }

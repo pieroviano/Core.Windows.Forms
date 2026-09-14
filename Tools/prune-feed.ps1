@@ -1,4 +1,4 @@
-# Reports - and optionally removes - AspNetCore.* packages on the local feed that no project in this
+# Reports - and optionally removes - this port's packages on the local feed that no project in this
 # solution produces any more.
 #
 # Why this exists
@@ -16,8 +16,9 @@
 #   powershell -ExecutionPolicy Bypass -File Tools/prune-feed.ps1            # report only
 #   powershell -ExecutionPolicy Bypass -File Tools/prune-feed.ps1 -Delete    # remove them
 #
-# ONLY AspNetCore.* is ever considered, and that is essential rather than cautious: the feed is
-# shared with every other product in the tree, whose packages are none of this script's business.
+# ONLY this port's id prefixes are ever considered - Core.AspNet.* today, AspNetCore.* and Net4x.AspNet*
+# from earlier namings - and that is essential rather than cautious: the feed is shared with every other
+# product in the tree, whose packages are none of this script's business. Net4x.* alone would take them.
 
 [CmdletBinding()]
 param (
@@ -45,7 +46,7 @@ foreach ($project in Get-ChildItem -Path $root -Directory -Filter 'AspNetCore.*'
     $assembly = [regex]::Match($text, '<AssemblyName>\s*(?<name>[^<]+?)\s*</AssemblyName>')
     if (-not $id.Success -or -not $assembly.Success) { continue }
 
-    $produced[$id.Groups['id'].Value.Replace('AspNet$(AssemblyName)', "AspNet$($assembly.Groups['name'].Value)")] = $true
+    $produced[$id.Groups['id'].Value.Replace('$(AssemblyName)', $assembly.Groups['name'].Value)] = $true
 }
 
 if ($produced.Count -eq 0) {
@@ -55,7 +56,8 @@ if ($produced.Count -eq 0) {
 Write-Output "This solution produces $($produced.Count) packages."
 
 $stale = @()
-foreach ($file in Get-ChildItem -Path $feed -Filter 'AspNetCore.*' -File) {
+$ours = 'Core.AspNet.*', 'AspNetCore.*', 'Net4x.AspNet*'
+foreach ($file in Get-ChildItem -Path $feed -File | Where-Object { $name = $_.Name; $ours | Where-Object { $name -like $_ } }) {
     if ($file.Extension -notin '.nupkg', '.snupkg') { continue }
 
     # Strip the version: the first dot followed by a digit starts it. Splitting on the last three dots
@@ -68,7 +70,7 @@ foreach ($file in Get-ChildItem -Path $feed -Filter 'AspNetCore.*' -File) {
 }
 
 if ($stale.Count -eq 0) {
-    Write-Output 'The feed holds no stale AspNetCore.* packages.'
+    Write-Output 'The feed holds no stale packages of this port.'
     exit 0
 }
 

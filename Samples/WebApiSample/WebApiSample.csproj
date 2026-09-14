@@ -4,7 +4,7 @@
        PackageReference. These samples use a ProjectReference instead, which carries no build/ assets,
        so they are imported by hand to get the same result: the content globs, App_Code handling and
        code-behind nesting that every ported project would otherwise repeat. -->
-  <Import Project="..\..\AspNetCore.Web.Hosting.Kestrel\build\Core.Web.Hosting.Kestrel.props" />
+  <Import Project="..\..\AspNetCore.Web.Hosting.Kestrel\build\Core.AspNet.Web.Hosting.Kestrel.props" />
 
   <!--
     ASP.NET Web API hosted inside the ported System.Web. Controllers are compiled by the SDK; there is
@@ -32,6 +32,6 @@
 
   <Import Project="..\..\Build\WebFormsPort.targets" />
 
-  <Import Project="..\..\AspNetCore.Web.Hosting.Kestrel\build\Core.Web.Hosting.Kestrel.targets" />
+  <Import Project="..\..\AspNetCore.Web.Hosting.Kestrel\build\Core.AspNet.Web.Hosting.Kestrel.targets" />
 
 </Project>

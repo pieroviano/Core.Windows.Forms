@@ -1,16 +1,16 @@
-# AspNetCore.Web.WebPages.Deployment
+# Core.AspNet.Web.WebPages.Deployment
 
 `System.Web.WebPages.Deployment` — version resolution and the `PreApplicationStartMethod` that starts
 the Web Pages runtime.
 
 ```xml
-<PackageReference Include="AspNetCore.Web.WebPages.Deployment" Version="1.0.0" />
+<PackageReference Include="Core.AspNet.Web.WebPages.Deployment" Version="1.0.0" />
 ```
 
-You do not reference this directly. It arrives with `AspNetCore.Web.WebPages.Base`, which needs it to
+You do not reference this directly. It arrives with `Core.AspNet.Web.WebPages.Base`, which needs it to
 bootstrap.
 
-> **Assembly vs package name.** The package is `AspNetCore.Web.WebPages.Deployment`; the assembly inside it is `Core.Web.WebPages.Deployment`.
+> **Assembly vs package name.** The package is `Core.AspNet.Web.WebPages.Deployment`; the assembly inside it is `Core.Web.WebPages.Deployment`.
 > .NET ships an empty `System.Web.dll` facade in `Microsoft.NETCore.App` and the host gives the shared
 > framework precedence, so an app-local `System.Web.dll` is never loaded — the port therefore cannot
 > use the original assembly names. **Namespaces are unchanged**, so your code and `Inherits=`

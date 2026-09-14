@@ -1,14 +1,14 @@
-# AspNetCore.Web.DynamicData
+# Core.AspNet.Web.DynamicData
 
 **ASP.NET Dynamic Data** on .NET 10 — the scaffolding that builds list, detail, edit and insert pages
 from a data model, with `[ScaffoldTable]`, `[ScaffoldColumn]`, field templates and metadata attributes
 working as they did.
 
 ```xml
-<PackageReference Include="AspNetCore.Web.DynamicData" Version="1.0.0" />
+<PackageReference Include="Core.AspNet.Web.DynamicData" Version="1.0.0" />
 ```
 
-> **Assembly vs package name.** The package is `AspNetCore.Web.DynamicData`; the assembly inside it is
+> **Assembly vs package name.** The package is `Core.AspNet.Web.DynamicData`; the assembly inside it is
 > `Core.Web.DynamicData`. .NET ships an empty `System.Web.dll` facade and the host gives the shared
 > framework precedence, so the port cannot use the original assembly names. **Namespaces are
 > unchanged** — `System.Web.DynamicData.MetaModel` is still `System.Web.DynamicData.MetaModel`.

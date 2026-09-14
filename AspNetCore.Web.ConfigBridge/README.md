@@ -1,15 +1,15 @@
-# AspNetCore.Web.ConfigBridge
+# Core.AspNet.Web.ConfigBridge
 
 Lets third-party libraries that read `System.Configuration.ConfigurationManager` see your
 `web.config`.
 
 ```xml
-<PackageReference Include="AspNetCore.Web.ConfigBridge" Version="1.0.0" />
+<PackageReference Include="Core.AspNet.Web.ConfigBridge" Version="1.0.0" />
 ```
 
-It arrives automatically with `AspNetCore.Web.Hosting.Kestrel`.
+It arrives automatically with `Core.AspNet.Web.Hosting.Kestrel`.
 
-> **Assembly vs package name.** The package is `AspNetCore.Web.ConfigBridge`; the assembly inside it is `Core.Web.ConfigBridge`.
+> **Assembly vs package name.** The package is `Core.AspNet.Web.ConfigBridge`; the assembly inside it is `Core.Web.ConfigBridge`.
 > .NET ships an empty `System.Web.dll` facade in `Microsoft.NETCore.App` and the host gives the shared
 > framework precedence, so an app-local `System.Web.dll` is never loaded — the port therefore cannot
 > use the original assembly names. **Namespaces are unchanged**, so your code and `Inherits=`
@@ -17,7 +17,7 @@ It arrives automatically with `AspNetCore.Web.Hosting.Kestrel`.
 
 ## The problem it solves
 
-The port reads configuration through `AspNetCore.Configuration` (Mono's implementation). A NuGet
+The port reads configuration through `Core.AspNet.Configuration` (Mono's implementation). A NuGet
 library you did not write reads it through the shipping `System.Configuration.ConfigurationManager`
 package. Those are two different type sets, and without a bridge the library sees an empty
 configuration and silently falls back to its defaults — a connection string that is suddenly `null`,

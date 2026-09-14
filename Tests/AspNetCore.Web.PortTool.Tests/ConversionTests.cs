@@ -79,17 +79,17 @@ namespace WebFormsPort.PortToolTests
 			PlanExecutor.Execute (plan);
 			project = fixture.Read ("MvcWithBundling.csproj");
 
-			Assert.Contains ("AspNetCore.Web.Hosting.Kestrel", project);
-			Assert.Contains ("AspNetCore.Web.Mvc", project);
-			Assert.Contains ("AspNetCore.Web.Optimization", project);
-			Assert.Contains ("AspNetCore.Web.Razor", project);
+			Assert.Contains (PortPackages.HostingKestrel, project);
+			Assert.Contains (PortPackages.Mvc, project);
+			Assert.Contains (PortPackages.Optimization, project);
+			Assert.Contains (PortPackages.Razor, project);
 
 			// Not a WCF or session-state application: those must NOT be dragged in.
-			Assert.DoesNotContain ("AspNetCore.Web.ServiceModel", project);
-			Assert.DoesNotContain ("AspNetCore.Web.SessionState", project);
+			Assert.DoesNotContain (PortPackages.ServiceModel, project);
+			Assert.DoesNotContain (PortPackages.SessionState, project);
 
 			// Every inference is auditable - a detection nobody can check is a guess.
-			Finding mvc = plan.Findings.First (f => f.Title == "Package AspNetCore.Web.Mvc");
+			Finding mvc = plan.Findings.First (f => f.Title == "Package " + PortPackages.Mvc);
 			Assert.Equal (Severity.Info, mvc.Severity);
 			Assert.Contains ("System.Web.Mvc", mvc.Detail);
 			Assert.StartsWith ("MvcWithBundling.csproj:", mvc.Evidence);
@@ -103,8 +103,8 @@ namespace WebFormsPort.PortToolTests
 			PlanExecutor.Execute (plan);
 
 			string project = fixture.Read ("WcfAndSessionState.csproj");
-			Assert.Contains ("AspNetCore.Web.ServiceModel", project);
-			Assert.Contains ("AspNetCore.Web.SessionState", project);
+			Assert.Contains (PortPackages.ServiceModel, project);
+			Assert.Contains (PortPackages.SessionState, project);
 
 			// And the host wires both, in the order that matters.
 			string program = fixture.Read ("Program.cs");
@@ -237,7 +237,7 @@ namespace WebFormsPort.PortToolTests
 			Assert.False (plan.HasBlockers, PlanPrinter.Summary (plan, false));
 
 			PlanExecutor.Execute (plan);
-			Assert.Contains ("AspNetCore.Web.DynamicData", fixture.Read ("DynamicDataApp.csproj"));
+			Assert.Contains (PortPackages.DynamicData, fixture.Read ("DynamicDataApp.csproj"));
 		}
 
 		[Fact]

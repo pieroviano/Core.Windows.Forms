@@ -2,10 +2,10 @@
 // Which port packages this application needs, and why.
 //
 // Every rule produces its evidence alongside its answer, because a detection nobody can audit is
-// indistinguishable from a guess. The report prints "added AspNetCore.Web.Mvc (MyApp.csproj:41
+// indistinguishable from a guess. The report prints "added Core.AspNet.Web.Mvc (MyApp.csproj:41
 // references System.Web.Mvc)" rather than a bare package list.
 //
-// The transitive packages - AspNetCore.Web, .Configuration, .Services, .Extensions, .ConfigBridge -
+// The transitive packages - Core.AspNet.Web.Forms, .Configuration, .Services, .Extensions, .ConfigBridge -
 // are deliberately NOT emitted. PORTING-GUIDE.md step 1 says the hosting package brings them, so
 // listing them would be noise that drifts out of date the moment that dependency graph changes.
 //
@@ -35,15 +35,15 @@ namespace PortProject
 
 	static class StackDetector
 	{
-		public const string HostingPackage = "AspNetCore.Web.Hosting.Kestrel";
+		public const string HostingPackage = PortPackages.HostingKestrel;
 
 		/// <summary>The Razor view engine is five packages that always travel together.</summary>
 		static readonly string [] RazorPackages = {
-			"AspNetCore.Web.WebPages.Base",
-			"AspNetCore.Web.WebPages.Razor",
-			"AspNetCore.Web.WebPages.Deployment",
-			"AspNetCore.Web.Razor",
-			"AspNetCore.Web.Infrastructure",
+			PortPackages.WebPages,
+			PortPackages.WebPagesRazor,
+			PortPackages.WebPagesDeployment,
+			PortPackages.Razor,
+			PortPackages.Infrastructure,
 		};
 
 		public static IReadOnlyList<Detection> Detect (LegacyProject project, ApplicationFiles files,
@@ -72,24 +72,24 @@ namespace PortProject
 
 				switch (reference.Name) {
 				case "System.Web.Mvc":
-					Add ("AspNetCore.Web.Mvc", "references System.Web.Mvc", evidence);
+					Add (PortPackages.Mvc, "references System.Web.Mvc", evidence);
 					AddRazor ("MVC views are Razor", evidence);
 					break;
 				case "System.Web.Optimization":
-					Add ("AspNetCore.Web.Optimization", "references System.Web.Optimization", evidence);
+					Add (PortPackages.Optimization, "references System.Web.Optimization", evidence);
 					break;
 				case "System.Web.Http":
 				case "System.Web.Http.WebHost":
-					Add ("AspNetCore.Web.Http", "references System.Web.Http", evidence);
-					Add ("AspNetCore.Web.Http.WebHost", "Web API needs its System.Web host", evidence);
-					Add ("AspNetCore.Net.Http.Formatting", "Web API needs the media-type formatters", evidence);
+					Add (PortPackages.Http, "references System.Web.Http", evidence);
+					Add (PortPackages.HttpWebHost, "Web API needs its System.Web host", evidence);
+					Add (PortPackages.HttpFormatting, "Web API needs the media-type formatters", evidence);
 					break;
 				case "System.Web.WebPages":
 				case "System.Web.Razor":
 					AddRazor ("references " + reference.Name, evidence);
 					break;
 				case "System.Web.DynamicData":
-					Add ("AspNetCore.Web.DynamicData", "references System.Web.DynamicData", evidence);
+					Add (PortPackages.DynamicData, "references System.Web.DynamicData", evidence);
 					AddRazor ("Dynamic Data scaffolds through Web Pages", evidence);
 					break;
 				}
@@ -98,19 +98,19 @@ namespace PortProject
 			foreach (PackageReference package in project.PackageReferences) {
 				switch (package.Id) {
 				case "Microsoft.AspNet.Mvc":
-					Add ("AspNetCore.Web.Mvc", "package Microsoft.AspNet.Mvc", package.Evidence);
+					Add (PortPackages.Mvc, "package Microsoft.AspNet.Mvc", package.Evidence);
 					AddRazor ("MVC views are Razor", package.Evidence);
 					break;
 				case "Microsoft.AspNet.Web.Optimization":
-					Add ("AspNetCore.Web.Optimization", "package Microsoft.AspNet.Web.Optimization",
+					Add (PortPackages.Optimization, "package Microsoft.AspNet.Web.Optimization",
 					     package.Evidence);
 					break;
 				case "Microsoft.AspNet.WebApi":
 				case "Microsoft.AspNet.WebApi.Core":
 				case "Microsoft.AspNet.WebApi.WebHost":
-					Add ("AspNetCore.Web.Http", "package " + package.Id, package.Evidence);
-					Add ("AspNetCore.Web.Http.WebHost", "Web API needs its System.Web host", package.Evidence);
-					Add ("AspNetCore.Net.Http.Formatting", "Web API needs the media-type formatters",
+					Add (PortPackages.Http, "package " + package.Id, package.Evidence);
+					Add (PortPackages.HttpWebHost, "Web API needs its System.Web host", package.Evidence);
+					Add (PortPackages.HttpFormatting, "Web API needs the media-type formatters",
 					     package.Evidence);
 					break;
 				case "Microsoft.AspNet.Razor":
@@ -126,23 +126,23 @@ namespace PortProject
 				AddRazor ("Razor views on disk", files.RazorViews [0]);
 
 			if (files.ServiceFiles.Count > 0)
-				Add ("AspNetCore.Web.ServiceModel", ".svc endpoints on disk", files.ServiceFiles [0]);
+				Add (PortPackages.ServiceModel, ".svc endpoints on disk", files.ServiceFiles [0]);
 
 			if (files.BundleConfig != null)
-				Add ("AspNetCore.Web.Optimization", "App_Start/BundleConfig", files.BundleConfig);
+				Add (PortPackages.Optimization, "App_Start/BundleConfig", files.BundleConfig);
 
 			if (files.ViewsWebConfig != null) {
-				Add ("AspNetCore.Web.Mvc", "Views/web.config names an MVC host factory", files.ViewsWebConfig);
+				Add (PortPackages.Mvc, "Views/web.config names an MVC host factory", files.ViewsWebConfig);
 				AddRazor ("MVC views are Razor", files.ViewsWebConfig);
 			}
 
 			// Dynamic Data leaves its scaffolding pages on disk even when the project file does not
 			// mention the assembly, which is common once someone has edited the templates by hand.
 			if (files.DynamicDataPages != null)
-				Add ("AspNetCore.Web.DynamicData", "Dynamic Data scaffolding on disk", files.DynamicDataPages);
+				Add (PortPackages.DynamicData, "Dynamic Data scaffolding on disk", files.DynamicDataPages);
 
 			if (webConfig.OutOfProcessSessionMode != null)
-				Add ("AspNetCore.Web.SessionState",
+				Add (PortPackages.SessionState,
 				     "sessionState mode=\"" + webConfig.OutOfProcessSessionMode + "\"",
 				     webConfig.Evidence);
 

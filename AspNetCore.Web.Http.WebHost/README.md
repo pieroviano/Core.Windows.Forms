@@ -1,15 +1,15 @@
-# AspNetCore.Web.Http.WebHost
+# Core.AspNet.Web.Http.WebHost
 
 `System.Web.Http.WebHost` — hosts ASP.NET Web API inside the `System.Web` pipeline.
 
 ```xml
-<PackageReference Include="AspNetCore.Web.Http.WebHost" Version="1.0.0" />
+<PackageReference Include="Core.AspNet.Web.Http.WebHost" Version="1.0.0" />
 ```
 
-Pairs with `AspNetCore.Web.Http`, which it brings with it. Without this package a Web API application
+Pairs with `Core.AspNet.Web.Http`, which it brings with it. Without this package a Web API application
 compiles and starts, and then every `api/...` URL 404s because nothing routes it.
 
-> **Assembly vs package name.** The package is `AspNetCore.Web.Http.WebHost`; the assembly inside it is `Core.Web.Http.WebHost`.
+> **Assembly vs package name.** The package is `Core.AspNet.Web.Http.WebHost`; the assembly inside it is `Core.Web.Http.WebHost`.
 > .NET ships an empty `System.Web.dll` facade in `Microsoft.NETCore.App` and the host gives the shared
 > framework precedence, so an app-local `System.Web.dll` is never loaded — the port therefore cannot
 > use the original assembly names. **Namespaces are unchanged**, so your code and `Inherits=`

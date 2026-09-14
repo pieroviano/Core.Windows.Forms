@@ -6,7 +6,7 @@
     Every packable project sets <PackageOutputPath>$(SolutionDir)Packages/</PackageOutputPath>, and
     SolutionDir is only defined by Visual Studio and by `dotnet build` on a .sln - NOT on a .slnx, and
     not when a single project is built directly. Left empty it resolves to "Packages/" relative to the
-    PROJECT, so the .nupkg lands in AspNetCore.Web.ConfigBridge\Packages\ instead of the repository
+    PROJECT, so the .nupkg lands in Core.AspNet.Web.ConfigBridge\Packages\ instead of the repository
     feed. Nothing fails; the package is simply not where anything looks for it, and a consumer
     restoring from the local feed gets NU1101 for a package that was definitely built.
 
@@ -36,12 +36,12 @@
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<IncludeSymbols>true</IncludeSymbols>
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
-		<RepositoryUrl>https://github.com/pieroviano/AspNetCore.Web.git</RepositoryUrl>
+		<RepositoryUrl>https://github.com/pieroviano/Core.AspNet.Web.git</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
-		<PackageProjectUrl>https://github.com/pieroviano/AspNetCore.Web</PackageProjectUrl>
+		<PackageProjectUrl>https://github.com/pieroviano/Core.AspNet.Web</PackageProjectUrl>
 		<Authors>Piero Viano</Authors>
 		<Company>Piero Viano</Company>
-		<Product>AspNetCore.Web.Kestrel</Product>
+		<Product>Core.AspNet.Web.Kestrel</Product>
 		<AssemblyVersion>1.0.0.0</AssemblyVersion>
 		<Copyright>Copyright (c) Piero Viano. All rights reserved.</Copyright>
 

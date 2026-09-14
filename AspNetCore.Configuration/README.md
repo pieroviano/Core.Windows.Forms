@@ -1,15 +1,15 @@
-# AspNetCore.Configuration
+# Core.AspNet.Configuration
 
 Mono's `System.Configuration`, ported to .NET 10. This is what the ported `System.Web` is written
 against, and it is not interchangeable with the `System.Configuration.ConfigurationManager` package.
 
 ```xml
-<PackageReference Include="AspNetCore.Configuration" Version="1.0.0" />
+<PackageReference Include="Core.AspNet.Configuration" Version="1.0.0" />
 ```
 
-It arrives automatically with `AspNetCore.Web.Base`; you rarely reference it directly.
+It arrives automatically with `Core.AspNet.Web.Forms`; you rarely reference it directly.
 
-> **Assembly vs package name.** The package is `AspNetCore.Configuration`; the assembly inside it is `Core.Configuration`.
+> **Assembly vs package name.** The package is `Core.AspNet.Configuration`; the assembly inside it is `Core.Configuration`.
 > .NET ships an empty `System.Web.dll` facade in `Microsoft.NETCore.App` and the host gives the shared
 > framework precedence, so an app-local `System.Web.dll` is never loaded — the port therefore cannot
 > use the original assembly names. **Namespaces are unchanged**, so your code and `Inherits=`
@@ -30,7 +30,7 @@ and friends) and its types collide by name with these. `WebFormsPort.targets` re
 its strong-named identity and nothing else can satisfy them.
 
 If a third-party library reads `ConfigurationManager.AppSettings` and should see your `web.config`,
-add **`AspNetCore.Web.ConfigBridge`**.
+add **`Core.AspNet.Web.ConfigBridge`**.
 
 ## Documentation
 

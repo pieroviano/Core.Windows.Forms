@@ -19,7 +19,7 @@ namespace PortProject
 {
 	sealed class PlannerOptions
 	{
-		public string PackageVersion { get; set; } = "1.0.0";
+		public string PackageVersion { get; set; } = PortPackages.DefaultVersion;
 
 		public bool GenerateProgram { get; set; } = true;
 
@@ -75,7 +75,7 @@ namespace PortProject
 		/// </summary>
 		static readonly Dictionary<string, string> BlockedButNowSupported = new Dictionary<string, string> (StringComparer.OrdinalIgnoreCase) {
 			["System.Data.Linq"] = "LINQ to SQL itself does not exist on .NET, but LinqDataSource and Dynamic Data now run on IQueryable instead - point ContextTypeName at an EF Core DbContext, a repository, or anything with queryable members. A DataContext subclass will not work; the entity classes usually will.",
-			["System.Web.DynamicData"] = "Dynamic Data works, through AspNetCore.Web.DynamicData. Its model comes from QueryableDataModelProvider rather than LINQ to SQL, so RegisterContext takes any context with IQueryable members.",
+			["System.Web.DynamicData"] = "Dynamic Data works, through " + PortPackages.DynamicData + ". Its model comes from QueryableDataModelProvider rather than LINQ to SQL, so RegisterContext takes any context with IQueryable members.",
 		};
 
 		public static ConversionPlan Plan (string projectPath, PlannerOptions options)
@@ -341,7 +341,7 @@ namespace PortProject
 					     "the .old file.",
 					     project.FileName);
 
-			if (detections.Any (d => d.Package == "AspNetCore.Web.ServiceModel")) {
+			if (detections.Any (d => d.Package == PortPackages.ServiceModel)) {
 				plan.Report (Severity.NeedsAttention, "WCF service code needs two using changes",
 					     "Contracts move from System.ServiceModel to CoreWCF: change " +
 					     "\"using System.ServiceModel;\" to \"using CoreWCF;\". The attributes keep " +
@@ -378,14 +378,14 @@ namespace PortProject
 					     "Route and bundle registration in Application_Start works unchanged.",
 					     files.GlobalAsax);
 
-			if (detections.Any (d => d.Package == "AspNetCore.Web.Mvc"))
+			if (detections.Any (d => d.Package == PortPackages.Mvc))
 				plan.Report (Severity.NeedsAttention, "MVC is version 4 here",
 					     "Attribute routing, bundling and @await are supplied by the port; view " +
 					     "components and tag helpers do not exist. A Views/web.config naming the MVC " +
 					     "host factory is required - the assembly rename above covers it.",
 					     files.ViewsWebConfig, "PORTING-GUIDE.md step 3");
 
-			if (detections.Any (d => d.Package == "AspNetCore.Web.Optimization"))
+			if (detections.Any (d => d.Package == PortPackages.Optimization))
 				plan.Report (Severity.NeedsAttention, "Bundles are concatenated, not minified",
 					     "WebGrease is .NET Framework only. Minify at build time and point the bundle " +
 					     "at the output, or use CdnPath.",

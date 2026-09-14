@@ -36,25 +36,25 @@ assets in `Build/`, and the tools in `Tools/`.
 
 | Package | Licence expression | Because |
 |---|---|---|
-| `AspNetCore.Web.Base` | `MIT` | Mono `System.Web` + this port |
-| `AspNetCore.Configuration` | `MIT` | Mono `System.Configuration` + this port |
-| `AspNetCore.Web.Services` | `MIT` | Mono `System.Web.Services` + this port |
-| `AspNetCore.Web.Extensions` | `MIT` | Mono `System.Web.Extensions` + this port |
-| `AspNetCore.Web.DynamicData` | `MIT` | Mono `System.Web.DynamicData` + this port |
-| `AspNetCore.Web.Infrastructure` | `MIT` | Mono `System.Web.Infrastructure` |
-| `AspNetCore.Web.Hosting.Kestrel` | `MIT` | written for this port |
-| `AspNetCore.Web.ConfigBridge` | `MIT` | written for this port |
-| `AspNetCore.Web.Optimization` | `MIT` | written for this port |
-| `AspNetCore.Web.ServiceModel` | `MIT` | written for this port |
-| `AspNetCore.Web.SessionState` | `MIT` | written for this port |
-| `AspNetCore.Web.Mvc` | `Apache-2.0 AND MIT` | ASP.NET MVC + Mono `AssemblyInfo.cs` + this port |
-| `AspNetCore.Web.Http` | `Apache-2.0 AND MIT` | ASP.NET Web API + this port |
-| `AspNetCore.Web.Http.WebHost` | `Apache-2.0 AND MIT` | ASP.NET Web API + this port |
-| `AspNetCore.Net.Http.Formatting` | `Apache-2.0 AND MIT` | ASP.NET Web API + this port |
-| `AspNetCore.Web.Razor` | `Apache-2.0 AND MIT` | Razor + Mono `AssemblyInfo.cs` + this port |
-| `AspNetCore.Web.WebPages.Base` | `Apache-2.0 AND MIT` | Web Pages + Mono `AssemblyInfo.cs` + this port |
-| `AspNetCore.Web.WebPages.Razor` | `Apache-2.0 AND MIT` | Web Pages + Mono `AssemblyInfo.cs` + this port |
-| `AspNetCore.Web.WebPages.Deployment` | `Apache-2.0 AND MIT` | Web Pages + Mono `AssemblyInfo.cs` + this port |
+| `Core.AspNet.Web.Forms` | `MIT` | Mono `System.Web` + this port |
+| `Core.AspNet.Configuration` | `MIT` | Mono `System.Configuration` + this port |
+| `Core.AspNet.Web.Services` | `MIT` | Mono `System.Web.Services` + this port |
+| `Core.AspNet.Web.Extensions` | `MIT` | Mono `System.Web.Extensions` + this port |
+| `Core.AspNet.Web.DynamicData` | `MIT` | Mono `System.Web.DynamicData` + this port |
+| `Core.AspNet.Web.Infrastructure` | `MIT` | Mono `System.Web.Infrastructure` |
+| `Core.AspNet.Web.Hosting.Kestrel` | `MIT` | written for this port |
+| `Core.AspNet.Web.ConfigBridge` | `MIT` | written for this port |
+| `Core.AspNet.Web.Optimization` | `MIT` | written for this port |
+| `Core.AspNet.Web.ServiceModel` | `MIT` | written for this port |
+| `Core.AspNet.Web.SessionState` | `MIT` | written for this port |
+| `Core.AspNet.Web.Mvc` | `Apache-2.0 AND MIT` | ASP.NET MVC + Mono `AssemblyInfo.cs` + this port |
+| `Core.AspNet.Web.Http` | `Apache-2.0 AND MIT` | ASP.NET Web API + this port |
+| `Core.AspNet.Web.Http.WebHost` | `Apache-2.0 AND MIT` | ASP.NET Web API + this port |
+| `Core.AspNet.Net.Http.Formatting` | `Apache-2.0 AND MIT` | ASP.NET Web API + this port |
+| `Core.AspNet.Web.Razor` | `Apache-2.0 AND MIT` | Razor + Mono `AssemblyInfo.cs` + this port |
+| `Core.AspNet.Web.WebPages.Base` | `Apache-2.0 AND MIT` | Web Pages + Mono `AssemblyInfo.cs` + this port |
+| `Core.AspNet.Web.WebPages.Razor` | `Apache-2.0 AND MIT` | Web Pages + Mono `AssemblyInfo.cs` + this port |
+| `Core.AspNet.Web.WebPages.Deployment` | `Apache-2.0 AND MIT` | Web Pages + Mono `AssemblyInfo.cs` + this port |
 
 Both licences are permissive and compatible. `Apache-2.0 AND MIT` is a statement that the assembly
 contains code under both, not a choice offered to you: comply with both.
@@ -63,7 +63,7 @@ Regenerate the classification behind this table with:
 
 ```powershell
 # counts upstream files per package, by source tree
-Get-ChildItem AspNetCore.*/Sources.generated.props | ForEach-Object {
+Get-ChildItem Core.AspNet.*/Sources.generated.props | ForEach-Object {
     $x = [xml](Get-Content $_)
     $inc = $x.Project.ItemGroup.Compile.Include
     [pscustomobject]@{

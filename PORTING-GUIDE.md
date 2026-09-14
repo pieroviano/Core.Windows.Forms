@@ -45,12 +45,12 @@ One package reference is enough for a WebForms application:
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="AspNetCore.Web.Hosting.Kestrel" Version="1.0.0" />
+  <PackageReference Include="Core.AspNet.Web.Hosting.Kestrel" Version="1.0.0" />
 </ItemGroup>
 ```
 
-It brings in `AspNetCore.Web.Base`, `AspNetCore.Configuration`, `AspNetCore.Web.Services`,
-`AspNetCore.Web.Extensions` and `AspNetCore.Web.ConfigBridge` transitively, and carries in its `build/`
+It brings in `Core.AspNet.Web.Forms`, `Core.AspNet.Configuration`, `Core.AspNet.Web.Services`,
+`Core.AspNet.Web.Extensions` and `Core.AspNet.Web.ConfigBridge` transitively, and carries in its `build/`
 folder the whole of what a ported project file used to have to say for itself — NuGet imports it
 automatically:
 
@@ -64,7 +64,7 @@ automatically:
 * **Project-tree nesting** — puts `Default.aspx.cs` and `Default.aspx.designer.cs` under `Default.aspx`
   in Solution Explorer. See step 8.
 
-Those assets are imported by file name — NuGet looks for `build/AspNetCore.Web.Hosting.Kestrel.props`
+Those assets are imported by file name — NuGet looks for `build/Core.AspNet.Web.Hosting.Kestrel.props`
 and `.targets` and nothing else. If you ever repackage the port under a different id, rename them to
 match, or consumers get a build with none of the above and a `CS0433` they cannot act on.
 
@@ -72,32 +72,32 @@ Add one more package per stack you use:
 
 | Package | Contents |
 |---|---|
-| `AspNetCore.Web.Hosting.Kestrel` | `UseWebForms`, the middleware, the build assets. **Start here.** |
-| `AspNetCore.Web.Base` | `System.Web` itself — pages, controls, session, caching, security |
-| `AspNetCore.Configuration` | Mono's `System.Configuration`, which the port is written against |
-| `AspNetCore.Web.Services` | `.asmx` / SOAP serving |
-| `AspNetCore.Web.Extensions` | `ScriptManager`, `UpdatePanel`, page methods |
-| `AspNetCore.Web.ConfigBridge` | lets third-party libraries' `ConfigurationManager` see `web.config` |
-| `AspNetCore.Web.Mvc` | ASP.NET MVC 4 — controllers, Razor views, `[Route]` attribute routing |
-| `AspNetCore.Web.Optimization` | `System.Web.Optimization` — script and style bundling |
-| `AspNetCore.Web.WebPages.Base`, `AspNetCore.Web.WebPages.Razor`, `AspNetCore.Web.WebPages.Deployment`, `AspNetCore.Web.Razor`, `AspNetCore.Web.Infrastructure` | the Razor view engine and Web Pages runtime |
-| `AspNetCore.Web.Http`, `AspNetCore.Web.Http.WebHost`, `AspNetCore.Net.Http.Formatting` | ASP.NET Web API |
-| `AspNetCore.Web.ServiceModel` | `.svc` (WCF) hosting — brings CoreWCF with it |
-| `AspNetCore.Web.SessionState` | `<sessionState>` `StateServer` and `SQLServer` — brings Microsoft.Data.SqlClient with it |
-| `AspNetCore.Web.DynamicData` | ASP.NET Dynamic Data scaffolding, on `IQueryable`/EF Core |
+| `Core.AspNet.Web.Hosting.Kestrel` | `UseWebForms`, the middleware, the build assets. **Start here.** |
+| `Core.AspNet.Web.Forms` | `System.Web` itself — pages, controls, session, caching, security |
+| `Core.AspNet.Configuration` | Mono's `System.Configuration`, which the port is written against |
+| `Core.AspNet.Web.Services` | `.asmx` / SOAP serving |
+| `Core.AspNet.Web.Extensions` | `ScriptManager`, `UpdatePanel`, page methods |
+| `Core.AspNet.Web.ConfigBridge` | lets third-party libraries' `ConfigurationManager` see `web.config` |
+| `Core.AspNet.Web.Mvc` | ASP.NET MVC 4 — controllers, Razor views, `[Route]` attribute routing |
+| `Core.AspNet.Web.Optimization` | `System.Web.Optimization` — script and style bundling |
+| `Core.AspNet.Web.WebPages.Base`, `Core.AspNet.Web.WebPages.Razor`, `Core.AspNet.Web.WebPages.Deployment`, `Core.AspNet.Web.Razor`, `Core.AspNet.Web.Infrastructure` | the Razor view engine and Web Pages runtime |
+| `Core.AspNet.Web.Http`, `Core.AspNet.Web.Http.WebHost`, `Core.AspNet.Net.Http.Formatting` | ASP.NET Web API |
+| `Core.AspNet.Web.ServiceModel` | `.svc` (WCF) hosting — brings CoreWCF with it |
+| `Core.AspNet.Web.SessionState` | `<sessionState>` `StateServer` and `SQLServer` — brings Microsoft.Data.SqlClient with it |
+| `Core.AspNet.Web.DynamicData` | ASP.NET Dynamic Data scaffolding, on `IQueryable`/EF Core |
 
-**Package names and assembly names differ, deliberately.** You reference `AspNetCore.Web.Base`; the
+**Package names and assembly names differ, deliberately.** You reference `Core.AspNet.Web.Forms`; the
 assembly inside it is `Core.Web`. The reason is in the next section but one — .NET ships an empty
 `System.Web.dll` and the port cannot reuse that name. Namespaces are untouched either way; the only
 place the *assembly* name matters is a `web.config` entry that names one (step 4).
 
 **And two ids carry a `.Base` suffix**, which nothing else in the naming scheme explains, so: the two
-packages whose id would otherwise be a *prefix of every other id in the set* — `AspNetCore.Web` and
-`AspNetCore.Web.WebPages` — are published as `AspNetCore.Web.Base` and `AspNetCore.Web.WebPages.Base`.
-A bare `AspNetCore.Web` reads as an umbrella meta-package rather than one assembly among twenty, and
+packages whose id would otherwise be a *prefix of every other id in the set* — `Core.AspNet.Web` and
+`Core.AspNet.Web.WebPages` — are published as `Core.AspNet.Web.Forms` and `Core.AspNet.Web.WebPages.Base`.
+A bare `Core.AspNet.Web` reads as an umbrella meta-package rather than one assembly among twenty, and
 on a public feed it is the id most likely to be squatted or confused with the repository name. The
 other seventeen ids are `AspNet` + the assembly name with no suffix. If you are searching a feed and
-find only `AspNetCore.Web.Base`, that is the one.
+find only `Core.AspNet.Web.Forms`, that is the one.
 
 ### Building the port from source instead
 
@@ -105,10 +105,10 @@ Only needed if you are changing the port itself:
 
 ```powershell
 git clone <this repo>
-cd AspNetCore.Web
+cd Core.AspNet.Web
 git submodule update --init --recursive     # Mono, AND the nested submodules inside it
-dotnet build AspNetCore.Web.slnx
-dotnet test AspNetCore.Web.slnx             # 445 tests
+dotnet build Core.AspNet.Web.slnx
+dotnet test Core.AspNet.Web.slnx             # 445 tests
 ```
 
 `--recursive` is not optional: Razor, WebPages, MVC and Web API come from
@@ -145,7 +145,7 @@ Replace the old `.csproj` with an SDK-style one. In full:
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AspNetCore.Web.Hosting.Kestrel" Version="1.0.0" />
+    <PackageReference Include="Core.AspNet.Web.Hosting.Kestrel" Version="1.0.0" />
   </ItemGroup>
 
 </Project>
@@ -777,9 +777,9 @@ upstream's unfinished work; `LIMITATIONS.md` is this port's.
 
 You now have an application whose behaviour you are about to change. Pin it down first. `Tests/` has
 working templates for every shape: HTTP suites that start a real Kestrel server on a loopback port
-(`AspNetCore.Web.FunctionalTests`, `.WebPages.Tests`, `.Http.Tests`, `.ServiceModel.Tests`,
+(`Core.AspNet.Web.FunctionalTests`, `.WebPages.Tests`, `.Http.Tests`, `.ServiceModel.Tests`,
 `.SessionState.Tests`) and browser suites driving a real Chromium through Playwright
-(`AspNetCore.Web.BrowserTests`, `.Mvc.BrowserTests`).
+(`Core.AspNet.Web.BrowserTests`, `.Mvc.BrowserTests`).
 
 Four things to copy rather than reinvent:
 
@@ -794,7 +794,7 @@ Four things to copy rather than reinvent:
 * **Test `.svc` endpoints with raw SOAP, not a generated client.** What has to be true is that a
   request to the URL the `.svc` file sits at gets a SOAP response. A client proxy builds its own
   address from configuration and would still pass if the `.svc` convention were doing nothing —
-  `AspNetCore.Web.ServiceModel.Tests` posts the envelope by hand for exactly that reason.
+  `Core.AspNet.Web.ServiceModel.Tests` posts the envelope by hand for exactly that reason.
 
 ---
 
@@ -853,9 +853,9 @@ Operational differences from IIS:
 
 | Task | Command |
 |---|---|
-| Reference the port | `<PackageReference Include="AspNetCore.Web.Hosting.Kestrel" Version="1.0.0" />` |
-| Build the port from source | `dotnet build AspNetCore.Web.slnx` |
-| Run the port's tests | `dotnet test AspNetCore.Web.slnx` |
+| Reference the port | `<PackageReference Include="Core.AspNet.Web.Hosting.Kestrel" Version="1.0.0" />` |
+| Build the port from source | `dotnet build Core.AspNet.Web.slnx` |
+| Run the port's tests | `dotnet test Core.AspNet.Web.slnx` |
 | Convert a project automatically | `dotnet run --project Tools/port-project -- <app-dir>` (add `--apply`) |
 | Diagnose configuration | `dotnet run --project Tools/verify-config -- <app-dir>` |
 | Reference apps | `Samples/WebFormsSample`, `WebFormsSampleVB`, `MvcSample`, `WebPagesSample`, `WebApiSample`, `WcfSample`, `SessionStateSample`, `DynamicDataSample` |

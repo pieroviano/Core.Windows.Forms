@@ -1,16 +1,16 @@
-# AspNetCore.Web.Razor
+# Core.AspNet.Web.Razor
 
 `System.Web.Razor` — the Razor **parser and code generator**, version 2, from the ASP.NET Web Stack
 sources.
 
 ```xml
-<PackageReference Include="AspNetCore.Web.Razor" Version="1.0.0" />
+<PackageReference Include="Core.AspNet.Web.Razor" Version="1.0.0" />
 ```
 
-This is the compiler front end only. To *render* `.cshtml` you also need `AspNetCore.Web.WebPages.Base`
-and `AspNetCore.Web.WebPages.Razor`; for MVC views, `AspNetCore.Web.Mvc` brings all of them.
+This is the compiler front end only. To *render* `.cshtml` you also need `Core.AspNet.Web.WebPages.Base`
+and `Core.AspNet.Web.WebPages.Razor`; for MVC views, `Core.AspNet.Web.Mvc` brings all of them.
 
-> **Assembly vs package name.** The package is `AspNetCore.Web.Razor`; the assembly inside it is `Core.Web.Razor`.
+> **Assembly vs package name.** The package is `Core.AspNet.Web.Razor`; the assembly inside it is `Core.Web.Razor`.
 > .NET ships an empty `System.Web.dll` facade in `Microsoft.NETCore.App` and the host gives the shared
 > framework precedence, so an app-local `System.Web.dll` is never loaded — the port therefore cannot
 > use the original assembly names. **Namespaces are unchanged**, so your code and `Inherits=`
@@ -29,7 +29,7 @@ The C# parser accepts **`await` in an implicit expression**. Razor v2 stopped at
 just wrong output on the page. Razor 3 fixed this upstream; the same fix is applied here.
 
 Making the *generated method* able to hold an `await` is the other half, and lives in
-`AspNetCore.Web.WebPages.Razor`. See LIMITATIONS for the cost.
+`Core.AspNet.Web.WebPages.Razor`. See LIMITATIONS for the cost.
 
 ## Documentation
 

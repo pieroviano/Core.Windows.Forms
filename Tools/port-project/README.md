@@ -31,7 +31,7 @@ port-project <path-to-.csproj|.vbproj|directory> [options]
   --force                 overwrite an existing .old backup
   --no-program            do not generate Program.cs
   --no-web-config         do not rewrite web.config
-  --package-version <v>   port package version to reference (default 1.0.0)
+  --package-version <v>   port package version to reference (default 1.0.0.*, the newest daily build)
   --json                  emit the plan and findings as JSON
   -h, --help              usage
 
@@ -56,23 +56,23 @@ Package selection is evidence-based. It reads your `<Reference>` list, your `pac
 is actually on disk — and prints why it chose each one:
 
 ```
-  - Package AspNetCore.Web.Mvc  [MyApp.csproj:41]
+  - Package Core.AspNet.Web.Mvc  [MyApp.csproj:41]
       references System.Web.Mvc
-  - Package AspNetCore.Web.ServiceModel  [Services/Echo.svc]
+  - Package Core.AspNet.Web.ServiceModel  [Services/Echo.svc]
       .svc endpoints on disk
 ```
 
 | Port package | Chosen when |
 |---|---|
-| `AspNetCore.Web.Hosting.Kestrel` | always |
-| `AspNetCore.Web.Mvc` | `System.Web.Mvc` referenced, `Microsoft.AspNet.Mvc` package, or a `Views/web.config` |
-| `AspNetCore.Web.Optimization` | `System.Web.Optimization` referenced, or an `App_Start/BundleConfig` |
+| `Core.AspNet.Web.Hosting.Kestrel` | always |
+| `Core.AspNet.Web.Mvc` | `System.Web.Mvc` referenced, `Microsoft.AspNet.Mvc` package, or a `Views/web.config` |
+| `Core.AspNet.Web.Optimization` | `System.Web.Optimization` referenced, or an `App_Start/BundleConfig` |
 | the five Razor packages | any `.cshtml`/`.vbhtml`, or anything that implies MVC |
-| `AspNetCore.Web.Http` + `.Http.WebHost` + `Net.Http.Formatting` | `System.Web.Http` referenced, or a Web API package |
-| `AspNetCore.Web.ServiceModel` | any `.svc` on disk |
-| `AspNetCore.Web.SessionState` | `<sessionState mode="StateServer">` or `"SQLServer"` |
+| `Core.AspNet.Web.Http.Library` + `.Web.Http.WebHost` + `.Net.Http.Formatting` | `System.Web.Http` referenced, or a Web API package |
+| `Core.AspNet.Web.ServiceModel` | any `.svc` on disk |
+| `Core.AspNet.Web.SessionState` | `<sessionState mode="StateServer">` or `"SQLServer"` |
 
-`AspNetCore.Web.Base`, `.Configuration`, `.Services`, `.Extensions` and `.ConfigBridge` are not listed —
+`Core.AspNet.Web.Forms`, `.Configuration`, `.Services`, `.Extensions` and `.ConfigBridge` are not listed —
 the hosting package brings them.
 
 ---

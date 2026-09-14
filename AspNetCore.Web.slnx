@@ -52,6 +52,7 @@
     <Build Solution="Release|*" Project="false" />
   </Project>
   <Project Path="AspNetCore.Web.Infrastructure/AspNetCore.Web.Infrastructure.csproj" />
+  <Project Path="AspNetCore.Web.SessionState/AspNetCore.Web.SessionState.csproj" />
   <Project Path="AspNetCore.Web.WebPages.Deployment/AspNetCore.Web.WebPages.Deployment.csproj" />
   <Project Path="AspNetCore.Web.WebPages/AspNetCore.Web.WebPages.csproj" />
   <Project Path="AspNetCore.Web.WebPages.Razor/AspNetCore.Web.WebPages.Razor.csproj" />
@@ -60,6 +61,7 @@
     <Build Solution="Release|*" Project="false" />
   </Project>
   <Project Path="AspNetCore.Net.Http.Formatting/AspNetCore.Net.Http.Formatting.csproj" />
+  <Project Path="AspNetCore.Web.Mvc/AspNetCore.Web.Mvc.csproj" />
   <Project Path="AspNetCore.Web.Optimization/AspNetCore.Web.Optimization.csproj" />
   <Project Path="AspNetCore.Web.Razor/AspNetCore.Web.Razor.csproj" />
   <Project Path="AspNetCore.Web.ServiceModel/AspNetCore.Web.ServiceModel.csproj" />

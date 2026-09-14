@@ -1,6 +1,6 @@
 # Repository review
 
-A review of `AspNetCore.Web` as it stands: 19 shipping packages, 8 sample applications, 15 test
+A review of `Core.AspNet.Web` as it stands: 19 shipping packages, 8 sample applications, 15 test
 projects, **445 tests, all passing** across three consecutive whole-solution runs, none skipped, and a
 build clean of warnings beyond the expected obsolete-API notices.
 
@@ -94,18 +94,18 @@ only arrangement in which the bug is visible, and it is not one that occurs by a
 The repository's founding decision is that upstream files are **compiled in place, never copied**, so
 the tree stays diffable against Mono. Four mechanisms exist and `CLAUDE.md` ranks them: *"Choose the
 lightest mechanism that works: patch for mechanical/repetitive edits, override only when a file needs
-real surgery (there are currently four in `AspNetCore.Web/Overrides/`)."*
+real surgery (there are currently four in `Core.AspNet.Web/Overrides/`)."*
 
 The count is stale, and the shape has changed more than the count suggests:
 
 | Project | Upstream files compiled | Overridden | Share |
 |---|---:|---:|---:|
-| `AspNetCore.Web` | 1,425 | 4 | 0.3% |
-| `AspNetCore.Web.WebPages.Deployment` | 16 | 1 | 6.2% |
-| **`AspNetCore.Web.DynamicData`** | **30** | **5** | **16.7%** |
+| `Core.AspNet.Web` | 1,425 | 4 | 0.3% |
+| `Core.AspNet.Web.WebPages.Deployment` | 16 | 1 | 6.2% |
+| **`Core.AspNet.Web.DynamicData`** | **30** | **5** | **16.7%** |
 
-`AspNetCore.Web` is exemplary — four overrides in fourteen hundred files, exactly the discipline the
-rule describes. `AspNetCore.Web.DynamicData` is a different situation: one file in six is a local copy,
+`Core.AspNet.Web` is exemplary — four overrides in fourteen hundred files, exactly the discipline the
+rule describes. `Core.AspNet.Web.DynamicData` is a different situation: one file in six is a local copy,
 and they are the load-bearing ones — `DynamicControl`, `DynamicField`, `DynamicDataExtensions`,
 `DynamicDataRouteHandler`. For that assembly "diffable against upstream" is materially weaker than the
 rule claims, and nothing in the documentation would tell a reader.
@@ -158,12 +158,12 @@ so a whole dependent set can be moved to a new version and verified before any o
 is documented under "The shared staging feed" in `README.md`, including its costs.
 
 The first cost is that the folder accumulates and a package id outlives the project that produced it.
-When `AspNetCore.Web.WebPages` was renamed to `AspNetCore.Web.WebPages.Base`, the old `.nupkg` stayed
+When `Core.AspNet.Web.WebPages` was renamed to `Core.AspNet.Web.WebPages.Base`, the old `.nupkg` stayed
 and kept satisfying restores — the port-tool build tests passed against an id no project emitted, and
 would have failed on a clean machine. That is the characteristic failure of this arrangement: it cannot
 be reproduced by whoever caused it.
 
-`Tools/prune-feed.ps1` reports and removes exactly those, and considers only `AspNetCore.*` because the
+`Tools/prune-feed.ps1` reports and removes exactly those, and considers only `Core.AspNet.*` because the
 feed holds other products' work. What is missing is anything that *runs* it. The natural moment is the
 one the design already defines — the deliberate push to nuget.org — and that is also the moment most
 likely to be done from memory. Naming it as a step wherever the publish is described turns a tool that

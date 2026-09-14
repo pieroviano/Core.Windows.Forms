@@ -16,7 +16,7 @@
         <PackageOutputPath>$(SolutionDir)Packages/</PackageOutputPath>
         <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
         <Version>$(VersionPrefix).$(VersionSuffix)</Version>
-        <TargetFramework>net10.0</TargetFramework>
+        <TargetFrameworks>net6.0;net8.0;net10.0</TargetFrameworks>
         <AssemblyName>Core.Web.Mvc</AssemblyName>
         <RootNamespace>System.Web.Mvc</RootNamespace>
         <LangVersion>latest</LangVersion>
@@ -32,7 +32,7 @@
         <MvcUpstreamDir>$(MSBuildThisFileDirectory)..\Mono\external\aspnetwebstack\src\System.Web.Mvc\</MvcUpstreamDir>
         <DefineConstants>$(DefineConstants);ASPNETMVC</DefineConstants>
         <DefineConstants>$(DefineConstants);NET_4_0;NET_4_5;MONO;SYSTEM_WEB_PORT</DefineConstants>
-        <PackageId>AspNet$(AssemblyName)</PackageId>
+        <PackageId>Core.AspNet.Web.Mvc</PackageId>
         <Description>ASP.NET MVC 4 on .NET 10 - controllers, Razor v2 views, model binding, TempData and async actions, plus [Route] attribute routing supplied by this port.</Description>
         <!-- Apache-2.0 for the aspnetwebstack sources this compiles, MIT for Mono's AssemblyInfo.cs and
              this port's own code. See Directory.Build.props for why the expression must be explicit. -->

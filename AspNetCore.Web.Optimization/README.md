@@ -1,13 +1,13 @@
-# AspNetCore.Web.Optimization
+# Core.AspNet.Web.Optimization
 
 `System.Web.Optimization` — script and style bundling. Your existing `App_Start/BundleConfig.cs` and
 `@Scripts.Render` / `@Styles.Render` calls work unchanged.
 
 ```xml
-<PackageReference Include="AspNetCore.Web.Optimization" Version="1.0.0" />
+<PackageReference Include="Core.AspNet.Web.Optimization" Version="1.0.0" />
 ```
 
-> **Assembly vs package name.** The package is `AspNetCore.Web.Optimization`; the assembly inside it is `Core.Web.Optimization`.
+> **Assembly vs package name.** The package is `Core.AspNet.Web.Optimization`; the assembly inside it is `Core.Web.Optimization`.
 > .NET ships an empty `System.Web.dll` facade in `Microsoft.NETCore.App` and the host gives the shared
 > framework precedence, so an app-local `System.Web.dll` is never loaded — the port therefore cannot
 > use the original assembly names. **Namespaces are unchanged**, so your code and `Inherits=`

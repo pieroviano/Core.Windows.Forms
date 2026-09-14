@@ -1,16 +1,16 @@
-# AspNetCore.Web
+# Core.AspNet.Web
 
 `System.Web` itself, ported to .NET 10 from the Mono sources: pages and controls, the HTTP pipeline,
 handlers and modules, session, caching, membership, and the WebForms page framework.
 
 ```xml
-<PackageReference Include="AspNetCore.Web.Base" Version="1.0.0" />
+<PackageReference Include="Core.AspNet.Web.Forms" Version="1.0.0" />
 ```
 
-Most applications should reference **`AspNetCore.Web.Hosting.Kestrel`** instead, which brings this in
+Most applications should reference **`Core.AspNet.Web.Hosting.Kestrel`** instead, which brings this in
 along with the host and the build assets that make it work.
 
-> **Assembly vs package name.** The package is `AspNetCore.Web.Base`; the assembly inside it is `Core.Web`.
+> **Assembly vs package name.** The package is `Core.AspNet.Web.Forms`; the assembly inside it is `Core.Web`.
 > .NET ships an empty `System.Web.dll` facade in `Microsoft.NETCore.App` and the host gives the shared
 > framework precedence, so an app-local `System.Web.dll` is never loaded — the port therefore cannot
 > use the original assembly names. **Namespaces are unchanged**, so your code and `Inherits=`
@@ -36,7 +36,7 @@ along with the host and the build assets that make it work.
 * **`machine.config` and the root `web.config`** are embedded as resources and extracted at runtime.
   The root configuration is what maps `*.aspx` to `PageHandlerFactory`; without it nothing is served.
 
-This assembly requires `AspNetCore.Configuration` — the shipping
+This assembly requires `Core.AspNet.Configuration` — the shipping
 `System.Configuration.ConfigurationManager` package cannot substitute for it.
 
 ## Documentation

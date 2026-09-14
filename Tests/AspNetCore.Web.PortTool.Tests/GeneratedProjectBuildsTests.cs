@@ -35,11 +35,11 @@ namespace WebFormsPort.PortToolTests
 	public class GeneratedProjectBuildsTests
 	{
 		/// <summary>
-		/// The version the packages in Packages/ actually carry. Directory.Build.props composes
-		/// "$(VersionPrefix).$(VersionSuffix)" = 1.0.0.0, which NuGet normalises to 1.0.0 - so this is
-		/// the string that resolves, and it is worth having in one place when it changes.
+		/// The version converted projects reference: the tool's own default. Directory.Build.props packs
+		/// "$(VersionPrefix).$(VersionSuffix)" = 1.0.0.&lt;yyDDD&gt;, a new number every day, so only a
+		/// floating 1.0.0.* resolves against whatever the last build put on the feed.
 		/// </summary>
-		const string PortPackageVersion = "1.0.0";
+		const string PortPackageVersion = PortPackages.DefaultVersion;
 
 		/// <summary>
 		/// Gives the fixture its OWN copy of the feed and its OWN package cache.
@@ -77,7 +77,7 @@ namespace WebFormsPort.PortToolTests
 			// machine of whoever introduced it, instead of on a clean checkout months later.
 			//
 			// Still ALL of them rather than just the plan's direct references: the hosting package depends
-			// on AspNetCore.Web.Base and friends, and a feed with holes is worse than no feed.
+			// on Core.AspNet.Web.Forms and friends, and a feed with holes is worse than no feed.
 			var wanted = ProducedPackageIds ();
 			var copied = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
 
@@ -86,7 +86,7 @@ namespace WebFormsPort.PortToolTests
 			// again, so an id can be absent for a moment through no fault of anyone's. Retrying makes the
 			// difference between "not built yet" and "being rebuilt right now", which a single pass cannot
 			// tell apart - and getting that wrong turns a green suite red at random.
-			// 60s, not 10s. AspNetCore.Web.Base wraps Core.Web - by far the largest assembly here - and
+			// 60s, not 10s. Core.AspNet.Web.Forms wraps Core.Web - by far the largest assembly here - and
 			// packing it takes longer than the rest put together, so it is reliably the one still missing
 			// when a shorter window expires. Waiting only happens when something is genuinely absent, so
 			// the ceiling costs nothing on a build that has already finished.
@@ -114,7 +114,7 @@ namespace WebFormsPort.PortToolTests
 				     String.Join (", ", wanted.Except (copied)) +
 				     ". Run `dotnet build AspNetCore.Web.slnx` to pack them before running this suite.");
 
-			// <clear /> so a machine-level NuGet.config cannot pull a DIFFERENT AspNetCore.Web.* from
+			// <clear /> so a machine-level NuGet.config cannot pull a DIFFERENT AspNetCore.* from
 			// somewhere else and make the result depend on who ran it.
 			File.WriteAllText (fixture.Path ("NuGet.config"),
 				"<?xml version=\"1.0\" encoding=\"utf-8\"?>" + Environment.NewLine +
@@ -136,9 +136,9 @@ namespace WebFormsPort.PortToolTests
 		/// <remarks>
 		/// A hand-maintained list would be wrong the first time a package is added or renamed, and wrong
 		/// silently - the suite would keep passing against whatever was already on the feed, which is the
-		/// exact failure this is meant to close. So the ids are derived: every packable project declares
-		/// <c>&lt;PackageId&gt;AspNet$(AssemblyName)&lt;/PackageId&gt;</c>, optionally with a
-		/// <c>.Base</c> suffix, and <c>AssemblyName</c> is right there in the same file.
+		/// exact failure this is meant to close. So the ids are derived from each packable project's
+		/// <c>&lt;PackageId&gt;</c> - a literal such as <c>Core.AspNet.Web.Forms</c>, or one built from
+		/// <c>$(AssemblyName)</c>, which is right there in the same file.
 		/// </remarks>
 		static HashSet<string> ProducedPackageIds ()
 		{
@@ -163,8 +163,7 @@ namespace WebFormsPort.PortToolTests
 				if (!assembly.Success)
 					continue;
 
-				ids.Add (id.Groups ["id"].Value
-					   .Replace ("AspNet$(AssemblyName)", "AspNet" + assembly.Groups ["name"].Value));
+				ids.Add (id.Groups ["id"].Value.Replace ("$(AssemblyName)", assembly.Groups ["name"].Value));
 			}
 
 			Assert.True (ids.Count > 0,
@@ -173,7 +172,29 @@ namespace WebFormsPort.PortToolTests
 			return ids;
 		}
 
-		/// <summary>Strips the version off a nupkg file name: "AspNetCore.Web.Mvc.1.0.0" -> the id.</summary>
+		/// <summary>
+		/// Every id in <see cref="PortPackages"/> names a package some project here produces.
+		/// </summary>
+		/// <remarks>
+		/// The cheap half of the rename check: it needs no feed and no build, and it names the stale id
+		/// directly, where the build tests below can only report a restore that failed.
+		/// </remarks>
+		[Fact]
+		public void Every_package_the_tool_emits_is_produced_by_the_solution ()
+		{
+			var produced = ProducedPackageIds ();
+
+			string [] emitted = typeof (PortPackages)
+				.GetFields (System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)
+				.Where (f => f.IsLiteral && f.Name != nameof (PortPackages.DefaultVersion))
+				.Select (f => (string) f.GetRawConstantValue ())
+				.ToArray ();
+
+			Assert.NotEmpty (emitted);
+			Assert.Empty (emitted.Where (id => !produced.Contains (id)));
+		}
+
+		/// <summary>Strips the version off a nupkg file name: "Core.AspNet.Web.Mvc.1.0.0.26257" -> the id.</summary>
 		static string PackageIdOf (string fileName)
 		{
 			// The first segment that starts with a digit begins the version. Splitting on the last three
@@ -281,7 +302,10 @@ namespace WebFormsPort.PortToolTests
 			var missing = plan.Findings
 				.Where (f => f.Severity == Severity.Info && f.Title.StartsWith ("Package ", StringComparison.Ordinal))
 				.Select (f => f.Title.Substring ("Package ".Length))
-				.Where (id => !File.Exists (Path.Combine (feed, id + "." + PortPackageVersion + ".nupkg")))
+				// Any version: the reference floats (PortPackageVersion), so the id being there is the test.
+				.Where (id => !Directory.GetFiles (feed, "*.nupkg").Any (
+					nupkg => String.Equals (PackageIdOf (Path.GetFileNameWithoutExtension (nupkg)), id,
+								StringComparison.OrdinalIgnoreCase)))
 				.ToArray ();
 
 			Assert.True (missing.Length == 0,
@@ -417,7 +441,7 @@ namespace WebFormsPort.PortToolTests
 		public void A_converted_dynamic_data_project_builds ()
 		{
 			// The newest stack the tool learned to detect, and therefore the one whose package reference
-			// has been proved least. A plan assertion can only say that "AspNetCore.Web.DynamicData"
+			// has been proved least. A plan assertion can only say that "Core.AspNet.Web.DynamicData"
 			// appears in the generated project file; only a real restore says the id exists, the version
 			// resolves, and the pages compile against what it contains.
 			using FixtureCopy fixture = Convert ("DynamicDataApp", "DynamicDataApp.csproj");

@@ -1,17 +1,17 @@
-# AspNetCore.Web.Http
+# Core.AspNet.Web.Http
 
 **ASP.NET Web API** on .NET 10 — `ApiController`, routing, content negotiation, model binding,
 filters and `HttpResponseException`.
 
 ```xml
-<PackageReference Include="AspNetCore.Web.Http" Version="1.0.0" />
-<PackageReference Include="AspNetCore.Web.Http.WebHost" Version="1.0.0" />
+<PackageReference Include="Core.AspNet.Web.Http" Version="1.0.0" />
+<PackageReference Include="Core.AspNet.Web.Http.WebHost" Version="1.0.0" />
 ```
 
 Both are needed: this package is the framework, `.WebHost` is what plugs it into the `System.Web`
-pipeline. `AspNetCore.Net.Http.Formatting` arrives with it.
+pipeline. `Core.AspNet.Net.Http.Formatting` arrives with it.
 
-> **Assembly vs package name.** The package is `AspNetCore.Web.Http`; the assembly inside it is `Core.Web.Http`.
+> **Assembly vs package name.** The package is `Core.AspNet.Web.Http`; the assembly inside it is `Core.Web.Http`.
 > .NET ships an empty `System.Web.dll` facade in `Microsoft.NETCore.App` and the host gives the shared
 > framework precedence, so an app-local `System.Web.dll` is never loaded — the port therefore cannot
 > use the original assembly names. **Namespaces are unchanged**, so your code and `Inherits=`
