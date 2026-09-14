@@ -460,7 +460,7 @@
     <Compile Include="..\Mono\mcs\class\System.Web\System.Web.SessionState_2.0\IStateRuntime.cs" />
     <Compile Include="..\Mono\mcs\class\System.Web\System.Web.SessionState_2.0\StateRuntime.cs" />
     <Compile Include="..\Mono\mcs\class\System.Web\System.Web.SessionState_2.0\SessionId.cs" />
-    <Compile Include="..\Mono\mcs\class\System.Web\System.Web.SessionState_2.0\SessionIDManager.cs" />
+    <Compile Include="patched\System.Web.SessionState_2.0__SessionIDManager.cs" />
     <Compile Include="..\Mono\mcs\class\System.Web\System.Web.SessionState_2.0\SessionInProcHandler.cs" />
     <Compile Include="..\Mono\mcs\class\System.Web\System.Web.SessionState_2.0\SessionSQLServerHandler.cs" />
     <Compile Include="..\Mono\mcs\class\System.Web\System.Web.SessionState_2.0\SessionStateActions.cs" />

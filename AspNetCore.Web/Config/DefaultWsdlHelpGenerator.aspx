@@ -88,7 +88,7 @@ void Page_Load(object sender, EventArgs e)
 	
 	CurrentOperationName = Request.QueryString["op"];
 	CurrentOperationBinding = Request.QueryString["bnd"];
-	if (CurrentOperationName != null) BuildOperationInfo ();
+	if (CurrentOperationName != null && CurrentOperationBinding == null) { Port soapPort = FindPort (null, "Soap"); if (soapPort != null) CurrentOperationBinding = soapPort.Name; } if (CurrentOperationName != null) BuildOperationInfo ();
 
 	PageName = HttpUtility.UrlEncode (Path.GetFileName(Request.Path), Encoding.UTF8);
 

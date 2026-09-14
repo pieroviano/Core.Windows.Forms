@@ -43,7 +43,6 @@
     <Compile Include="..\Mono\mcs\class\System.Web.Extensions\System.Web.Script.Serialization\ScriptIgnoreAttribute.cs" />
     <Compile Include="..\Mono\mcs\class\System.Web.Extensions\System.Web.Script.Serialization\SimpleTypeResolver.cs" />
     <Compile Include="..\Mono\mcs\class\System.Web.Extensions\System.Web.Script.Serialization\StringBuilderExtensions.cs" />
-    <Compile Include="..\Mono\mcs\class\System.Web.Extensions\System.Web.Script.Services\AuthenticationService.cs" />
     <Compile Include="..\Mono\mcs\class\System.Web.Extensions\System.Web.Script.Services\ClientProxyHandler.cs" />
     <Compile Include="..\Mono\mcs\class\System.Web.Extensions\System.Web.Script.Services\GenerateScriptTypeAttribute.cs" />
     <Compile Include="patched\System.Web.Script.Services__LogicalTypeInfo.cs" />

@@ -497,3 +497,14 @@ System.Web.UI.WebControls/FormView.cs	if \(args\.Cancel \|\| !IsBoundUsingDataSo
 #     keeps one ordered buffer and flushes it after every write when buffering is off, so the bytes
 #     leave in the order they were written. Drain the buckets before the direct write.
 System.Web/HttpResponseStream.cs	response\.WriteHeaders \(false\);	response.WriteHeaders (false); if (total > 0) Flush (response.WorkerRequest, false);
+
+# --- GET script-service arguments are JSON. [ScriptMethod (UseHttpGet = true)] proxies send each
+#     argument JSON-encoded in the query string (?prefix=%22x%22), and ASP.NET's RestHandler
+#     (GetRawParamsFromGetRequest) deserializes every value. Upstream passed the raw text through, so
+#     a string parameter arrived still quoted - "\"x\"" instead of "x".
+System.Web.Script.Services/LogicalTypeInfo.cs	ret\.Add \(nvc\.GetKey \(i\), nvc\.Get \(i\)\);	ret.Add (nvc.GetKey (i), JavaScriptSerializer.DefaultSerializer.DeserializeObject (nvc.Get (i)));
+
+# --- The session cookie is HttpOnly, path "/". ASP.NET's SessionIDManager.SaveSessionID sets
+#     HttpOnly so client script cannot read or plant a session id (VSWhidbey 414687); upstream left it
+#     readable from document.cookie.
+System.Web.SessionState_2.0/SessionIDManager.cs	cookie\.Path = request\.ApplicationPath;	cookie.Path = "/"; cookie.HttpOnly = true;
