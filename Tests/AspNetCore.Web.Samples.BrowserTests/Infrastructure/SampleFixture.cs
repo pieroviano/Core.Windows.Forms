@@ -21,6 +21,11 @@ namespace WebFormsPort.SamplesBrowserTests
 
 		protected abstract string SampleName { get; }
 
+		/// <summary>The sample's directory name under Samples/.</summary>
+		public string SampleNameForTests {
+			get { return SampleName; }
+		}
+
 		public SampleProcess Sample { get; private set; }
 
 		public IBrowser Browser { get; private set; }
