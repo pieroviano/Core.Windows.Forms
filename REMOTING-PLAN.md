@@ -8,9 +8,9 @@ Implements the four remoting-dependent gaps on top of `D:\CommonLibrary\Net4x.Ru
 | # | Check | How | Result |
 |---|---|---|---|
 | B1 | A process can list its loaded shared frameworks | `AppContext.GetData ("APP_CONTEXT_DEPS_FILES")` in a `Microsoft.NET.Sdk.Web` exe | **Verified** — `;`-separated deps.json paths, `shared/<name>/<version>/` per framework |
-| B2 | `dotnet exec --runtimeconfig <generated> Net4x.AppDomain.Host.dll` starts the host with extra frameworks | run it by hand, expect `READY` | before L2 |
-| B3 | Mono `System.Web.Caching.Cache` constructs outside a hosted app (state server process) | `new Cache ()` in a console exe referencing `Core.Web` | before W3 |
-| B4 | `HttpListener` + `HttpClient` available on netstandard2.0 | build the library | before L1 |
+| B2 | `dotnet exec --runtimeconfig <generated> Net4x.AppDomain.Host.dll` starts the host with extra frameworks | run it by hand, expect `READY` | **Verified** |
+| B3 | Mono `System.Web.Caching.Cache` constructs outside a hosted app (state server process) | `Tools/state-server` under `RemoteStateServerTests` | **Verified** |
+| B4 | `TcpListener` + `HttpClient` available on netstandard2.0 | build the library | **Verified** (listener is a socket server, not `HttpListener` — http.sys needs a url reservation) |
 
 ## Decisions (user)
 

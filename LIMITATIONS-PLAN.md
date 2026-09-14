@@ -20,13 +20,12 @@ the *feature*, or the *implementation the feature happened to use*. Almost every
 
 ### There is no AppDomain
 
-CoreCLR has one `AppDomain` and no unloading. Everything downstream follows: no application recycling,
-no shadow copying, no `AppDomain.Unload` on a configuration change, no two applications in one process.
-`WebFormsRuntimeHost.Initialize` returning early on a second call is not a shortcut — it is the only
-honest behaviour available.
-
-The deployment shape is process-per-application, which is what every ASP.NET Core deployment already
-does.
+CoreCLR has one `AppDomain` and no unloading, so one process runs one application:
+`WebFormsRuntimeHost.Initialize` returning early on a second call is the only honest behaviour. What
+remains inherent is the *mapping*, not the capability — `Core.Web.Remoting` makes a domain a child
+process, which gives `CreateApplicationHost`, `ApplicationManager`, several applications behind one
+Kestrel, and recycling, at the cost of buffered cross-process requests (LIMITATIONS §3). No shadow
+copying in either shape.
 
 ### `BinaryFormatter` is gone
 
@@ -62,9 +61,10 @@ and reports the rest.
 
 ### .NET Remoting
 
-Removed from .NET, not ported by anyone, and superseded twice over — WCF, then gRPC. `.rem` and `.soap`
-paths are not served. This is the one entry in `LIMITATIONS.md` whose migration is a redesign rather
-than a port: re-expose the contract as Web API or gRPC.
+Transparent proxies are a CLR feature, so `System.Runtime.Remoting` itself cannot return. `.rem`
+endpoints are served on Net4x.Runtime.Remoting (`Core.Web.Remoting`), which keeps the API but not the
+wire format: every client must move to the same library. Inherent: no interoperation with unmodified
+.NET Framework peers. Deliberate: no SOAP formatter.
 
 ### COM+ and `System.EnterpriseServices`
 

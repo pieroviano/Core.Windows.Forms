@@ -8,8 +8,8 @@ and `web.config` stay as they are, and namespaces are unchanged — `System.Web.
 `System.Web.UI.Page`, `System.Web.Mvc.Controller` is still `System.Web.Mvc.Controller`. What changes is
 the *host*, the project file, and a short list of things IIS used to do for you.
 
-Read [LIMITATIONS.md](LIMITATIONS.md) first. If your application depends on .NET Remoting, that is
-worth knowing before you start rather than at step 6.
+Read [LIMITATIONS.md](LIMITATIONS.md) first. If your application depends on .NET Remoting, its
+clients have to move to Net4x.Runtime.Remoting too — worth knowing before you start rather than at step 6.
 
 ---
 
@@ -21,7 +21,8 @@ Work through this before touching anything. Each "yes" is a blocker or a rewrite
 |---|---|
 | Hosts `.svc` (WCF) endpoints? | Works — served by CoreWCF at the path each `.svc` sits at, keeping your URLs and contracts. Your `[ServiceContract]` attributes move from `System.ServiceModel` to `CoreWCF`. See step 3. |
 | Uses a custom `ServiceHostFactory` in a `.svc`? | Not supported — CoreWCF builds the host itself. Drop the `Factory=` attribute, or configure that service through CoreWCF directly. |
-| Uses `.rem`/`.soap` (.NET Remoting)? | **Not portable at all** — transparent proxies are a CLR feature CoreCLR does not have. Re-expose as Web API. LIMITATIONS §2. |
+| Uses `.rem` (.NET Remoting)? | Works with `Core.AspNet.Web.Remoting` and `web.config` unchanged — but **every client must reference Net4x.Runtime.Remoting** (no wire compatibility with .NET Framework), class contracts need `virtual` members, and SOAP (`.soap`) is not supported. LIMITATIONS §2. |
+| Uses `CreateApplicationHost`, `ApplicationManager`, or several applications in one IIS site that recycle? | Works with `Core.AspNet.Web.Remoting`; each application is a child process (`UseWebFormsApplications`). Requests are buffered across the boundary. LIMITATIONS §3. |
 | `<sessionState mode="StateServer">` or `"SQLServer"`? | Works, and `web.config` is unchanged — but StateServer is now an `IDistributedCache` (not `aspnet_state.exe`), and **existing session data does not carry across** either mode. See step 5. |
 | Stores anything unusual in `Session`, and uses an out-of-process mode? | `InProc` never serialized; these do. A type that has worked for years can fail on the first request. See step 5. |
 | Uses ASP.NET MVC? | Works — **MVC 4** with Razor v2, plus attribute routing, bundling and `@await` supplied by this port. No view components or tag helpers. See step 3. |
@@ -834,9 +835,10 @@ assembly side by side. That satisfies both the SDK and the port's classic-layout
 
 Operational differences from IIS:
 
-* **Process lifetime is yours.** No app-pool recycling, no auto-restart on `web.config` change. Use
-  systemd, a Windows Service, or a container.
-* **One application per process.** No shared app pools.
+* **Process lifetime is yours.** With `UseWebForms`: no app-pool recycling, no auto-restart on
+  `web.config` change. Use systemd, a Windows Service, or a container.
+* **One application per process** — unless you host with `UseWebFormsApplications` (`Core.AspNet.Web.Remoting`),
+  which runs each application in a recycled child process behind one Kestrel.
 * **Put a reverse proxy in front** (nginx, YARP, IIS as a pure proxy) for TLS termination, request
   limits and connection management — Kestrel's defaults are not IIS's, and `<httpRuntime>` limits are
   not enforced.

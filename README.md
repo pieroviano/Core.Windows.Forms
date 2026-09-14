@@ -75,6 +75,7 @@ its own process, which is the isolation that buys.
 | `Core.AspNet.Web.Http.Tests` | Web API routing, negotiation and model binding | hosts `Samples/WebApiSample` |
 | `Core.AspNet.Web.ServiceModel.Tests` | `.svc` (WCF) discovery and SOAP hosting on CoreWCF | hosts `Samples/WcfSample`; the `.svc` scan runs once per process |
 | `Core.AspNet.Web.SessionState.Tests` | out-of-proc session: `StateServer` over HTTP, `SQLServer` against ASPState | hosts `Samples/SessionStateSample`; `SessionStateHostServices` freezes on first use |
+| `AspNetCore.Web.Remoting.Tests` | `*.rem` called from a child process, `StateServer` against `Tools/state-server`, `CreateApplicationHost`, `ApplicationManager`, `UseWebFormsApplications` recycling | hosts `Samples/RemotingSample`; every other application runs in a child process |
 | `Core.AspNet.Web.LegacyStacks.Tests` | System.Web.Mail over a real SMTP socket, the object-graph state serializer, LinqDataSource and Dynamic Data on IQueryable | hosts no application |
 | `Core.AspNet.Web.LegacyStacks.HttpTests` | Dynamic Data scaffolding and `LinqDataSource` through a `GridView`, over real HTTP | hosts `Samples/DynamicDataSample` |
 | `Core.AspNet.Web.PortTool.Tests` | `Tools/port-project` against hand-written legacy fixtures, including really running `dotnet build` on the converted output | hosts no application; needs the local package feed populated |
@@ -151,6 +152,7 @@ nothing should: the whole point is that the push is a separate, deliberate step.
 | `Core.AspNet.Web.Optimization` | `Core.Web.Optimization` | `System.Web.Optimization` |
 | `Core.AspNet.Web.ServiceModel` | `Core.Web.ServiceModel` | `System.Web.ServiceModel` |
 | `Core.AspNet.Web.SessionState` | `Core.Web.SessionState` | `System.Web.SessionState` |
+| `Core.AspNet.Web.Remoting` | `Core.Web.Remoting` | `System.Web.Hosting`, `System.Web.SessionState`, `System.Runtime.Remoting.Channels.Http` |
 | `Core.AspNet.Web.DynamicData` | `Core.Web.DynamicData` | `System.Web.DynamicData` |
 
 .NET ships **empty** `System.Web.dll` and `System.Configuration.dll` facades in
@@ -178,8 +180,9 @@ Each upstream file goes down exactly one of four paths:
 
 1. **Compiled in place** from `Mono/mcs/class/...` — the default.
 2. **Excluded** — a substring match in `Tools/port-exclusions.txt` drops it (a trailing `/` drops a
-   directory). Used for out-of-scope features: `System.Web.Mail`, AppDomain/ISAPI hosting, out-of-proc
-   session state, WSDL/DISCO codegen, Sqlite providers.
+   directory). Used for out-of-scope features: ISAPI hosting, WSDL/DISCO codegen, Sqlite providers, and
+   the remoting-dependent files Core.Web cannot carry (`Build/System.Web.Remoting.sources` compiles
+   those into Core.Web.Remoting and is exempt from the exclusions).
 3. **Patched** — a rule in `Tools/port-patches.txt` (3 tab-separated fields:
    `path-filter <TAB> regex <TAB> replacement`) produces a copy in `<project>/patched/` which is
    compiled instead. **Patches must preserve line count** — the generator throws otherwise — so
@@ -230,6 +233,12 @@ public entry point. `WebFormsRuntimeHost` replaces `ApplicationHost.CreateApplic
 one AppDomain, so it sets `.appPath` and friends as AppDomain data directly and `HttpRuntime` reads
 them back unmodified. `AspNetCoreWorkerRequest` adapts `HttpWorkerRequest` onto ASP.NET Core's
 `HttpContext`. Put `UseStaticFiles()` *before* `UseWebForms()` rather than filtering requests.
+
+`app.UseWebFormsApplications(...)` (`AspNetCore.Web.Remoting/Port/WebFormsApplications.cs`) hosts several
+applications, each in a child process started through Net4x.AppDomain: the parent buffers a request,
+the child runs the same `UseWebForms` middleware on a rebuilt `HttpContext`
+(`Port/ApplicationWorker.cs`). `HttpRuntime.UnloadAppDomain` reaches the parent through
+`Core.Web/Port/PortApplicationLifetime.cs`, which is what makes recycling work.
 
 Note the namespace trap in that project: it is nested under `System.Web`, so an unqualified
 `HttpContext` binds to `System.Web.HttpContext`. ASP.NET Core's is reached via the

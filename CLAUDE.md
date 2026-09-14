@@ -5,7 +5,8 @@ Guidance for working in this repository.
 ## What this is
 
 A port of the ASP.NET stack — **WebForms, MVC 4, Razor, Web Pages, Web API**, plus `.svc` (WCF) on
-CoreWCF and out-of-proc session state — to modern .NET, hosted under Kestrel instead of IIS/`AppDomain`.
+CoreWCF, out-of-proc session state and .NET Remoting/AppDomain hosting — to modern .NET, hosted under Kestrel
+instead of IIS/`AppDomain`.
 
 - Upstream source is the `mono/` submodule (and its nested `mono/external/aspnetwebstack`, which holds
   MVC/Razor/Web Pages/Web API). Clone with `git submodule update --init --recursive`.
@@ -31,7 +32,8 @@ powershell -ExecutionPolicy Bypass -File Tools/prune-feed.ps1 [-Delete]   # stal
 # Diagnostics / tools
 dotnet run --project Tools/verify-config [-- <app-dir>]     # boot config, dump full exception chain (default: Samples/WebFormsSample)
 dotnet run --project Tools/port-project -- <app> [--apply]  # convert a legacy app; previews unless --apply
-dotnet run --project Samples/WebFormsSample                 # also WebFormsSampleVB, MvcSample, WebApiSample, WebPagesSample, WcfSample, SessionStateSample, DynamicDataSample
+dotnet run --project Samples/WebFormsSample                 # also WebFormsSampleVB, MvcSample, WebApiSample, WebPagesSample, WcfSample, SessionStateSample, DynamicDataSample, RemotingSample
+dotnet run --project Tools/state-server [-- --port 42424]    # remote StateServer for UseWebFormsRemoteStateServer
 
 # Tests
 dotnet test AspNetCore.Web.slnx
@@ -58,6 +60,7 @@ dotnet test Tests/AspNetCore.Web.FunctionalTests --filter "FullyQualifiedName~Po
 | `AspNetCore.Web.ConfigBridge` | `Core.Web.ConfigBridge` | `System.Web.Configuration.Bridge` | 6/8/10 | port-authored |
 | `AspNetCore.Web.ServiceModel` | `Core.Web.ServiceModel` | `System.Web.ServiceModel` | 6/8/10 | port-authored (CoreWCF) |
 | `AspNetCore.Web.SessionState` | `Core.Web.SessionState` | `System.Web.SessionState` | **10 only** | port-authored |
+| `AspNetCore.Web.Remoting` | `Core.Web.Remoting` | `System.Web` | 6/8/10 | mono (`Build/System.Web.Remoting.sources`) + port-authored, on the Net4x.Runtime.Remoting packages |
 
 Samples, tests and tools target `net10.0`.
 
@@ -95,7 +98,7 @@ in every package.
 | Path | Mechanism | Notes |
 |---|---|---|
 | Compiled in place | default | from `mono/mcs/class/...` or `mono/external/aspnetwebstack/src/...` |
-| Excluded | substring in `Tools/port-exclusions.txt` (trailing `/` = directory) | AppDomain/ISAPI hosting, WSDL/DISCO importers, Mono remoting state server, Sqlite providers, `external/Newtonsoft.Json/` |
+| Excluded | substring in `Tools/port-exclusions.txt` (trailing `/` = directory) | ISAPI hosting, WSDL/DISCO importers, Sqlite providers, `external/Newtonsoft.Json/` |
 | Patched | `Tools/port-patches.txt`: `path-filter<TAB>regex<TAB>replacement` → `<project>/patched/` | **Must preserve line count** (generator throws). Zero-match rule = error (usually a broken regex; sources are CRLF, so `$` must allow `\r`). `patched/` is committed |
 | Overridden | `<project>/Overrides/<flattened>.cs` | leading `../` stripped, `/` → `__` (e.g. `Overrides/System.Web__HttpRuntime.cs`) |
 
@@ -130,6 +133,12 @@ The most intricate part and the source of the most confusing failures.
   early.
 - `AspNetCoreWorkerRequest` adapts `HttpWorkerRequest` to ASP.NET Core `HttpContext`.
 - `UseStaticFiles()` goes *before* `UseWebForms()`.
+- Several applications: `app.UseWebFormsApplications(...)` (Core.Web.Remoting) — one child process per application
+  (Net4x.AppDomain), requests buffered across, recycled via `Core.Web/Port/PortApplicationLifetime.cs`.
+  `CreateApplicationHost`/`ApplicationManager` use the same child domains.
+- The remoting library (`D:/CommonLibrary/Net4x.Runtime.Remoting`) is consumed from `Packages/` at a day-stamped
+  version: after rebuilding it, delete `~/.nuget/packages/core.runtime.remoting`, `core.appdomain.library` and
+  `core.appdomain.host`, or the stale same-version copy is restored.
 - Namespace trap: the project lives under `System.Web`, so bare `HttpContext` is `System.Web.HttpContext`;
   use the `AspNetCoreHttpContext` alias for ASP.NET Core's.
 
@@ -162,6 +171,7 @@ Each project runs in its own process because the runtime hosts one application p
 | `Http.Tests` | Web API routing, negotiation, binding | `Samples/WebApiSample` |
 | `ServiceModel.Tests` | `.svc` discovery, SOAP on CoreWCF | `Samples/WcfSample`; scan once per process |
 | `SessionState.Tests` | `StateServer` over HTTP, `SQLServer` against ASPState | `Samples/SessionStateSample`; services freeze on first use |
+| `Remoting.Tests` | `*.rem` from a child process, remote StateServer (`Tools/state-server`, port 42424), `CreateApplicationHost`, `ApplicationManager`, `UseWebFormsApplications` recycling | `Samples/RemotingSample`; other apps run in child processes |
 | `LegacyStacks.Tests` | System.Web.Mail over SMTP, object-graph serializer, LinqDataSource/Dynamic Data on IQueryable | no app |
 | `LegacyStacks.HttpTests` | Dynamic Data + `LinqDataSource` via `GridView` over HTTP | `Samples/DynamicDataSample` |
 | `PortTool.Tests` | `Tools/port-project` on legacy fixtures, incl. real `dotnet build` of output | needs `Packages/` populated |

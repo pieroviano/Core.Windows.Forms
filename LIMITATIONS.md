@@ -35,7 +35,8 @@ inventoried per assembly in [MONOTODO.md](MONOTODO.md), generated so it cannot d
 | **`LinqDataSource`** | Working, on `IQueryable`/EF Core instead of LINQ to SQL. See §2 |
 | **`System.Web.Mail`** | Working — Mono's managed SMTP, unchanged |
 | **Mobile controls** (`System.Web.Mobile`) | **Not ported, and not planned.** See §4 |
-| **.NET Remoting** (`.rem`, `.soap`) | **Not portable.** See §2 |
+| **.NET Remoting** (`.rem`) | Working, on Net4x.Runtime.Remoting (`Core.Web.Remoting`); binary formatter only, both ends must be this port. See §2 |
+| **AppDomain hosting** (`CreateApplicationHost`, `ApplicationManager`, several recycled applications) | Working — a domain is a child process. See §3 |
 
 All of it is covered by 445 tests, against C# and VB applications, over HTTP and through a real browser.
 
@@ -62,19 +63,21 @@ Read this section before planning a cutover. Each substitution is transparent to
 visible in your *operations* — and in two of the three cases it decides whether existing data survives
 the move.
 
-### .NET Remoting is not portable at all
+### .NET Remoting runs on a replacement library, not on `System.Runtime.Remoting`
 
-`System.Runtime.Remoting.Proxies.RealProxy`, `System.Runtime.Remoting.Channels` and
-`RemotingServices` do not exist on .NET 10 — compiling against any of them fails with `CS0234`.
+Remoting's transparent proxies are a CLR feature CoreCLR lacks, so Mono's `System.Runtime.Remoting`
+cannot be ported. `Core.Web.Remoting` uses **Net4x.Runtime.Remoting** instead (packages
+`Core.Runtime.Remoting`, `Core.AppDomain.Library`, `Core.AppDomain.Host`): same public API, proxies
+generated with `Reflection.Emit`, its own binary format.
 
-That is not a missing library. Remoting's transparent proxies are a **CLR feature**: the runtime
-manufactures a `__TransparentProxy` whose every member dispatch is intercepted and forwarded. CoreCLR
-has no such machinery. Mono's `System.Runtime.Remoting` sources exist in the tree, but porting them
-would produce an assembly with nothing underneath it — the hooks it compiles against are in the
-runtime, not in a reference.
-
-So `.rem` and `.soap` endpoints have no path forward here. Re-expose that surface as HTTP: a Web API
-`ApiController` is the closest equivalent and is available now.
+| | |
+|---|---|
+| `*.rem` in `web.config` | Served as written: root web.config maps `*.rem` to `HttpRemotingHandlerFactory`, which applies `<system.runtime.remoting>` and hooks an http channel under the application url. Well-known and client-activated types work |
+| Wire compatibility | **None with .NET Framework.** Clients must reference Net4x.Runtime.Remoting too |
+| SOAP (`*.soap`, `text/xml`, `<formatter ref="soap"/>`) | Not implemented; answered 415 / rejected at configuration |
+| Class contracts | Members must be `virtual` (a proxy is a subclass); the proxy factory names offenders. Interface contracts need nothing |
+| Callbacks over http | Only to a client that registered a receiver channel, as on .NET Framework |
+| Library deviations | `Net4x.Runtime.Remoting/docs/deviations.md` |
 
 ### `.svc` endpoints are served, but by CoreWCF rather than a ported `System.ServiceModel`
 
@@ -276,11 +279,12 @@ New code should still use `System.Net.Mail`.
 change. What changed is what sits behind each of them, and in one case that is a data-migration
 question rather than a configuration one.
 
-Mono's implementations could not be used. Its StateServer handler is built on .NET Remoting —
-`Activator.GetObject` against a `MarshalByRefObject` — the same CLR feature that makes `.rem`
-impossible above, and it was never wire-compatible with Microsoft's `aspnet_state.exe` anyway. Its SQL
-handler targets a Mono-invented `Sessions` table through a `Mono.Data.Sqlite` factory this port
-excludes, so a migrating application's existing database does not fit it.
+Mono's SQL handler targets a Mono-invented `Sessions` table through a `Mono.Data.Sqlite` factory this
+port excludes, so a migrating application's existing database does not fit it. Mono's StateServer
+handler is available as an alternative store: `app.UseWebFormsRemoteStateServer ()` selects it, and
+`Tools/state-server` (or `RemoteStateServerHost.Start ()`) is the server, on port 42424 and loopback
+only by default, as `aspnet_state.exe` was. It speaks Net4x.Runtime.Remoting over tcp, **not**
+`aspnet_state.exe`'s protocol.
 
 **`mode="StateServer"` is an `IDistributedCache`.** You register one — `AddStackExchangeRedisCache`,
 `AddDistributedSqlServerCache`, or `AddDistributedMemoryCache` for a single instance — and call
@@ -320,20 +324,28 @@ is what you actually want.
 
 ## 3. Deployment differences
 
-### There is no AppDomain, and no application recycling
+### An AppDomain is a process
 
-The AppDomain hosting family is out of scope (`Tools/port-exclusions.txt`: `AppDomainFactory`,
-`ApplicationManager`, `ISAPIRuntime`, `IISAPIRuntime`). `WebFormsRuntimeHost` sets `.appPath`,
-`.appVPath`, `.appId` and friends directly on the single AppDomain the process has.
+CoreCLR has one AppDomain. `WebFormsRuntimeHost` sets `.appPath`, `.appVPath`, `.appId` and friends
+directly on it, so **one process runs one application**. Two hosting shapes follow:
 
-* **One application per process.** `WebFormsRuntimeHost.Initialize` is idempotent and silently returns
-  on a second call. Run two processes to host two applications.
-* **No shadow copying and no auto-restart on file change.** Editing `web.config` or dropping a new
-  assembly does not recycle the app — restart the process. `.aspx`/`.cshtml` edits *are* picked up,
-  because those are compiled per file at request time.
-* **No `<processModel>`, no IIS app-pool recycling.** Process lifetime belongs to your host.
-* Shutdown runs through `IHostApplicationLifetime.ApplicationStopping` → `WebFormsRuntimeHost.Shutdown`.
-  `AppDomain.DomainUnload` never fires.
+| | `app.UseWebForms` (one application) | `app.UseWebFormsApplications` (`Core.Web.Remoting`) |
+|---|---|---|
+| Applications per server | one | several, each in a child process, routed by virtual path |
+| Recycling on `web.config` / `bin` / `App_Code` / `Global.asax` change | **none** — restart the process | the child is replaced; in-flight requests finish (`ShutdownTimeout`, 90 s) |
+| `HttpRuntime.UnloadAppDomain` | no effect | recycles the application |
+| Crash | the host dies | restarted on the next request; the request in progress gets 503 |
+| Requests | streamed by Kestrel | buffered both ways across the process boundary; no WebSockets, no ASP.NET Core authentication inside the application |
+
+Also on child processes: `ApplicationHost.CreateApplicationHost` (returns a proxy to the host object
+created in the domain) and `ApplicationManager` (one domain per application id). Host and registered
+object types are used through proxies, so their members must be `virtual`. A domain takes about a
+second to start. `ISAPIRuntime`, `AppDomainFactory` and `ICustomLoader` stay excluded: IIS-native entry
+points.
+
+In every shape: `.aspx`/`.cshtml` edits are picked up per file; there is no shadow copying and no
+`<processModel>`. Shutdown runs through `IHostApplicationLifetime.ApplicationStopping` (and, in a child,
+process exit) → `WebFormsRuntimeHost.Shutdown`; `AppDomain.DomainUnload` never fires.
 
 ### Compiled pages are cached per application path, not per process
 
@@ -411,7 +423,7 @@ Windows / Negotiate authentication is **not** in this table — see §5.
 
 | Feature | What is missing | When it fails |
 |---|---|---|
-| **.NET Remoting** (`.rem`, `.soap`) | see §2 | no handler; the paths are not served |
+| **SOAP remoting** (`.soap`, `text/xml`) | no SOAP formatter in Net4x.Runtime.Remoting — §2 | 415 on the request; `<formatter ref="soap"/>` rejected at configuration |
 | **Mobile controls** | `System.Web.Mobile` | tag prefix stops resolving; page fails to parse. See below |
 | **LINQ to SQL** | `System.Data.Linq` does not exist on .NET | a `DataContext` cannot be used. `LinqDataSource` and Dynamic Data work on `IQueryable` instead — §2. `Linq.Binary` model binding is dropped |
 | **Entity data source** | `System.Web.Entity` | tag prefix stops resolving |
