@@ -5,5 +5,5 @@
 # those exclusions. Patches in Tools/port-patches.txt apply as usual.
 System.Web.SessionState_2.0/RemoteStateServer.cs
 System.Web.SessionState_2.0/SessionStateServerHandler.cs
-#W3 System.Web.Hosting/ApplicationManager.cs
-#W3 System.Web.Hosting/ApplicationInfo.cs
+System.Web.Hosting/ApplicationManager.cs
+System.Web.Hosting/ApplicationInfo.cs

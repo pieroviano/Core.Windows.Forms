@@ -3,5 +3,6 @@
   <ItemGroup>
     <Compile Include="patched\System.Web.SessionState_2.0__RemoteStateServer.cs" />
     <Compile Include="patched\System.Web.SessionState_2.0__SessionStateServerHandler.cs" />
+    <Compile Include="..\Mono\mcs\class\System.Web\System.Web.Hosting\ApplicationInfo.cs" />
   </ItemGroup>
 </Project>
