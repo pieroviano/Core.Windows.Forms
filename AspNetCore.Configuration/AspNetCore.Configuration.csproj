@@ -35,10 +35,8 @@
          8.0.2, not 8.0.0: that version was never published on this line, so asking for it makes
          every consuming project emit NU1603 and silently resolve upwards anyway. -->
         <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.10" />
+        <PackageReference Include="Net4x.NuGetUtility" Version="$(NuGetUtilityVersion)" PrivateAssets="All" />
     </ItemGroup>
-	<ItemGroup>
-		<PackageReference Include="Net4x.NuGetUtility" Version="$(NuGetUtilityVersion)" PrivateAssets="All" />
-	</ItemGroup>
     <!-- Upstream sources, compiled in place. Regenerate with: tools/gen-sources.ps1 -->
     <Import Project="Sources.generated.props" />
     <ItemGroup>
